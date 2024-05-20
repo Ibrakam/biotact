@@ -1,6 +1,8 @@
 import requests
+from dotenv import dotenv_values
 
-api_key = "8baa4de3-34a3-40fc-9a13-182b6e5fa296"
+config_token = dotenv_values(".env")
+api_key = config_token['API_KEY']
 
 
 def geolocators(latitude, longitude):
