@@ -11,3 +11,6 @@ class RegistrationState(StatesGroup):
 class StageOfOrderState(StatesGroup):
     get_delivery = State()
     get_location = State()
+
+class PromocodeState(StatesGroup):
+    get_promocode = State()

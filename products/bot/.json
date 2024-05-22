@@ -5,6 +5,7 @@
       "message_info": "Узбекистан, 100109 Ташкент\nУлица Фаробий 448j\n\uD83D\uDCDE +998935551747",
       "message_reg_name": "Как нам к вам обращаться?\nНапишите ваше имя",
       "message_reg_phone": "Теперь скиньте номер",
+      "message_promocode": "Введите промокод",
       "inline_keyboard_button": {
        "choose_product": "\uD83D\uDCD6 Выбрать продукт",
         "about_us": "\uD83D\uDCDD О нас",
@@ -15,16 +16,20 @@
         "pickup": "Самовывоз",
         "delivery": "Доставка",
         "back": "Назад",
-        "send_location": "Отправить местоположение"
+        "send_location": "Отправить местоположение",
+        "re-order": "Начать заказ заново"
+
       },
       "choose_product_menu": "<b>Готовы сделать заказ? Оформите его, и мы доставим ваш товар прямо к вам \n<blockquote>❗\uFE0F Доставка по городу Ташкент - 30.000 сум (в течении 24 часов)\n❗\uFE0F Доставка по Республике Узбекистан (цена меняется в зависимости от локации)</blockquote>\n\nВыберите удобный способ оплаты:\n\n• Оплата картой (HUMO/UZCARD) при получении товара\n• Оплата наличными при получении товара\n\n \uD83D\uDC47Выберите продукцию\uD83D\uDC47</b>",
-      "about_us_menu": "<b>BIOTACT DEUTSCHLAND</b>  - ваш надежный партнер в мире инновационных пробиотиков и витаминно-минеральных \nкомплексов. Мы вносим инновации и немецкое качество в каждый дом, предоставляя вам и вашей семье лучшее для здоровья.\n<blockquote>• Головной офис BIOTACT DEUTSCHLAND находится в Германии, в городе Бонн.\n• 19 лет / Продукция известна в Узбекистане.\n• 8 млн / Проданных упаковок.\n• Инновационные формулы.\n• Команда высококлассных специалистов и профессионалов в области медицины, биологии и химии.\n• Собственная сертифицированная лаборатория.\n• Международные стандарты ISO 9001 и ISO 22000 от немецкого органа DQS.\n• Членство в NEM e.V.- Европейской ассоциации производителей и дистрибьютеров нутрицевтиков и продуктов для здоровья.\n• 100% натуральная и безопасная продукция, без искусственных добавок и аллергенов.\n• Подходит для всех возрастных групп: детей, взрослых, пожилых, беременных и кормящих.\n• Гарантированное немецкое качество.</blockquote>"
+      "about_us_menu": "<b>BIOTACT DEUTSCHLAND</b>  - ваш надежный партнер в мире инновационных пробиотиков и витаминно-минеральных \nкомплексов. Мы вносим инновации и немецкое качество в каждый дом, предоставляя вам и вашей семье лучшее для здоровья.\n<blockquote>• Головной офис BIOTACT DEUTSCHLAND находится в Германии, в городе Бонн.\n• 19 лет / Продукция известна в Узбекистане.\n• 8 млн / Проданных упаковок.\n• Инновационные формулы.\n• Команда высококлассных специалистов и профессионалов в области медицины, биологии и химии.\n• Собственная сертифицированная лаборатория.\n• Международные стандарты ISO 9001 и ISO 22000 от немецкого органа DQS.\n• Членство в NEM e.V.- Европейской ассоциации производителей и дистрибьютеров нутрицевтиков и продуктов для здоровья.\n• 100% натуральная и безопасная продукция, без искусственных добавок и аллергенов.\n• Подходит для всех возрастных групп: детей, взрослых, пожилых, беременных и кормящих.\n• Гарантированное немецкое качество.</blockquote>",
+      "which_payment": "Какой способ оплаты?"
     },
     "uz": {
       "message_hello": "<b>\uD83C\uDDE9\uD83C\uDDEA Biotact Deutschland onlayn-do'koniga xush kelibsiz!</b>\n\n<blockquote>Bu erda siz butun oila uchun probiyotiklar va vitamin-mineral komplekslarni xarid qilishingiz mumkin.\n\nBiz nemis sifatiga kafolat beramiz. Germaniya DQS organi tomonidan sertifikatlangan ISO 9001 va ISO 22000 HACCP xalqaro standartlari, shuningdek, o'z laboratoriyamiz mahsulotimiz sifati va xavfsizligi kafolati hisoblanadi.</blockquote>\n",
       "message_info": "\nO‘zbekiston, 100109 Toshkent\nForobiy ko‘chasi, 448j\n\uD83D\uDCDE +998935551747",
       "message_reg_name": "Ismni kiriting",
       "message_reg_phone": "Telefon raqamingizni kiriting",
+      "message_promocode": "Promokod kiritish",
       "inline_keyboard_button": {
         "choose_product": "\uD83D\uDCD6 Buyurtma berish",
         "about_us": "\uD83D\uDCDD Biz haqimizda",
@@ -35,10 +40,13 @@
         "pickup": "Olib ketish",
         "delivery": "Yetkazib berish",
         "back": "Orqaga",
-        "send_location": "Manzilni jo’natish"
+        "send_location": "Manzilni jo’natish",
+        "re-order": "Buyurtma qayta boshlash"
+
       },
       "choose_product_menu": "<b>Buyurtma berishga tayyormisiz? Uni to'ldiring va biz mahsulotingizni to'g'ridan-to'g'ri sizga yetkazib beramiz.\n<blockquote>❗\uFE0F Toshkent shahri bo'ylab yetkazib berish - 30 000 so'm (24 soat ichida)\n❗\uFE0F O'zbekiston Respublikasi bo'ylab yetkazib berish (narx joylashuviga qarab o'zgaradi)</blockquote>\n\nQulay to'lov usulini tanlang:\n\n• Tovarni olgandan keyin karta (HUMO/UZCARD) orqali to'lash\n• Tovarni olgandan keyin naqd pulda to'lash\n\n \uD83D\uDC47Mahsulotlarni tanlang\uD83D\uDC47</b>",
-      "about_us_menu": "<b>BIOTACT DEUTSCHLAND</b> - innovatsion probiotiklar hamda vitamin va minerallar komplekslari olamida sizning ishonchli \nhamkoringiz. Biz innovatsiyalar va nemis sifatini har bir uyga olib kirishimiz bilan siz va oilangiz salomatligi uchun eng \nyaxshisini taqdim etamiz.\n\n<blockquote>• BIOTACT DEUTSCHLANDning bosh ofisi Germaniyaning Bonn shahrida joylashgan. \n• 19 yil / Mahsulot Oʻzbekistonda tanilgan. \n• 8 mln / Sotilgan qadoqlar.\n• Innovatsion formulalar.\n• Tibbiyot, biologiya va kimyo sohasida yuqori malakali mutaxassis va professionallar jamoasi.\n• Oʻz serkifikatlashtirilgan laboratoriyamiz.\n• Nemis organi DQS tomonidan ISO 9001 va ISO 22000 xalqaro standartlari.\n• NEM e.V. aʼzosi – Yevropaning salomatlik uchun turli mahsulotlar va nutritsevtiklar ishlab chiqaruvchilari va distribyuterlari assotsiatsiyasi.\n• sunʼiy qoʻshimcha va allergenlarsiz, 100% tabiiy va xavfsiz mahsulot.\n• Barcha yosh guruhidagilarga mos keladi: bolalar, kattalar, keksalar, homilador va \n emizikli ayollar. \n• Kafolatlangan nemis sifati.</blockquote>"
+      "about_us_menu": "<b>BIOTACT DEUTSCHLAND</b> - innovatsion probiotiklar hamda vitamin va minerallar komplekslari olamida sizning ishonchli \nhamkoringiz. Biz innovatsiyalar va nemis sifatini har bir uyga olib kirishimiz bilan siz va oilangiz salomatligi uchun eng \nyaxshisini taqdim etamiz.\n\n<blockquote>• BIOTACT DEUTSCHLANDning bosh ofisi Germaniyaning Bonn shahrida joylashgan. \n• 19 yil / Mahsulot Oʻzbekistonda tanilgan. \n• 8 mln / Sotilgan qadoqlar.\n• Innovatsion formulalar.\n• Tibbiyot, biologiya va kimyo sohasida yuqori malakali mutaxassis va professionallar jamoasi.\n• Oʻz serkifikatlashtirilgan laboratoriyamiz.\n• Nemis organi DQS tomonidan ISO 9001 va ISO 22000 xalqaro standartlari.\n• NEM e.V. aʼzosi – Yevropaning salomatlik uchun turli mahsulotlar va nutritsevtiklar ishlab chiqaruvchilari va distribyuterlari assotsiatsiyasi.\n• sunʼiy qoʻshimcha va allergenlarsiz, 100% tabiiy va xavfsiz mahsulot.\n• Barcha yosh guruhidagilarga mos keladi: bolalar, kattalar, keksalar, homilador va \n emizikli ayollar. \n• Kafolatlangan nemis sifati.</blockquote>",
+      "which_payment": "Qaysi to’lov usulini tanlang?"
     }
   }
 }

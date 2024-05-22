@@ -93,17 +93,25 @@ def about_us_menu_kb(lang: str):
     return kb.as_markup()
 
 
-def user_cart_edit(lang: str, all_pr: list = None) -> InlineKeyboardMarkup:
+def user_cart_edit(lang: str, promo_code: bool = False, all_pr: list = None) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     if all_pr:
         for product in all_pr:
             kb.button(text="❌" + " " + product["product_name"], callback_data=f"deleteprod_{product['id']}")
-        kb.button(text=ru["promocode"] if lang == 'ru' else uz["promocode"], callback_data="write_promocode")
+        if not promo_code:
+            kb.button(text=ru["promocode"] if lang == 'ru' else uz["promocode"], callback_data="write_promocode")
         kb.button(text=ru["order"] if lang == 'ru' else uz["order"], callback_data="order")
         kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="choose_product")
         kb.adjust(1)
         return kb.as_markup()
 
     kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="choose_product")
+    kb.adjust(1)
+    return kb.as_markup()
+
+
+def back_promocode(lang: str) -> InlineKeyboardMarkup:
+    kb = InlineKeyboardBuilder()
+    kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="from_promocode")
     kb.adjust(1)
     return kb.as_markup()

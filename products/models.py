@@ -45,13 +45,25 @@ class UserTG(models.Model):
         verbose_name_plural = 'Пользователи'
 
 
+class UsedPromocode(models.Model):
+    user_id = models.BigIntegerField(blank=True, null=True)
+    promocode = models.CharField(max_length=50, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.promocode
+
+    class Meta:
+        verbose_name = 'Использованный промокод'
+        verbose_name_plural = 'Использованные промокоды'
+
 class Promocode(models.Model):
-    code = models.CharField(max_length=50, blank=True, null=True)
+    promocode_code = models.CharField(max_length=50, blank=True, null=True)
     discount = models.BigIntegerField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.code
+        return self.promocode_code
 
     class Meta:
         verbose_name = 'Промокод'

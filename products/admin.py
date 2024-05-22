@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, UserTG, CategoryProducts, Promocode, UserCart
+from .models import Product, UserTG, CategoryProducts, Promocode, UserCart, UsedPromocode
 
 
 # Register your models here.
@@ -28,9 +28,9 @@ class UserCartAdmin(admin.ModelAdmin):
 
 @admin.register(Promocode)
 class PromocodeAdmin(admin.ModelAdmin):
-    search_fields = ['code', 'id']
+    search_fields = ['promocode_code', 'id']
     list_filter = ['created_at']
-    list_display = ['id', 'code', 'created_at']
+    list_display = ['id', 'promocode_code', 'created_at']
     ordering = ['-id']
 
 
@@ -40,3 +40,8 @@ class UserTGAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     list_display = ['id', 'user_tg_id', 'user_name', 'created_at']
     ordering = ['-id']
+
+
+@admin.register(UsedPromocode)
+class UsedPromocodeAdmin(admin.ModelAdmin):
+    pass

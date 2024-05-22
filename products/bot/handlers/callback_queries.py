@@ -6,9 +6,10 @@ from aiogram.types import CallbackQuery, FSInputFile
 from asgiref.sync import sync_to_async
 from django.shortcuts import get_object_or_404
 
-from products.bot.states import RegistrationState
+from products.bot.keyboards.kb import payment_kb
+from products.bot.states import RegistrationState, PromocodeState
 from products.bot.handlers.some_func import json_loader
-from products.bot.keyboards.inline_kb import product_kb, product_menu_kb, about_us_menu_kb
+from products.bot.keyboards.inline_kb import product_kb, product_menu_kb, about_us_menu_kb, back_promocode
 from products.bot.handlers.bot_commands import menu, user_cart_menu
 from products.models import UserTG, Product, UserCart
 
@@ -180,3 +181,31 @@ async def about_us(query: CallbackQuery):
     elif lang == 'uz':
         await query.message.delete()
         await query.message.answer(uz['about_us_menu'], parse_mode="HTML", reply_markup=about_us_menu_kb(lang='uz'))
+
+
+@callback_router.callback_query(F.data == "write_promocode")
+async def write_promocode(query: CallbackQuery, state: FSMContext):
+    user_id = query.from_user.id
+    lang = await get_lang(user_id)
+    if lang == 'ru':
+        await query.message.edit_text(ru['message_promocode'], reply_markup=back_promocode(lang))
+    else:
+        await query.message.edit_text(uz['message_promocode'], reply_markup=back_promocode(lang))
+
+    await state.set_state(PromocodeState.get_promocode)
+
+@callback_router.callback_query(F.data == "from_promocode")
+async def root(query: CallbackQuery, state: FSMContext):
+    user_id = query.from_user.id
+    lang = await get_lang(user_id)
+    await state.clear()
+    await user_cart_menu(lang=lang, query=query)
+
+
+@callback_router.callback_query(F.data == "order")
+async def root(query: CallbackQuery, state: FSMContext):
+    user_id = query.from_user.id
+    lang = await get_lang(user_id)
+    await query.message.delete()
+    await query.message.answer(ru["which_payment"] if lang == "ru" else uz["which_payment"], reply_markup=payment_kb(lang))
+    await state.clear()

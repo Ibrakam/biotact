@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .product {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            max-width: 300px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .product:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .photo_pr {
+            width: 100%;
+            height: auto;
+            transition: transform 0.3s;
+        }
+
+        .product:hover .photo_pr {
+            transform: scale(1.1);
+        }
+
+        .pr_info {
+            font-size: 1.5em;
+            margin: 15px 0;
+            color: #333;
+        }
+
+        .pr_price {
+            font-size: 1.2em;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .product {
+                max-width: 100%;
+                margin: 10px;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+    {% for product in products %}
+    <div class="product">
+        <img src="{{ product.product_image.url }}" class="photo_pr" alt="Product Image">
+        <h2 class="pr_info">{{ product.product_name }}</h2>
+        <p class="pr_price">{{ product.price }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

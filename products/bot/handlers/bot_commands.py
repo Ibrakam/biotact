@@ -4,17 +4,22 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove
 from aiogram.filters import CommandStart
-from products.models import UserTG, UserCart, Product
+from django.db.models import Q
+
+from products.models import UserTG, UserCart, Product, Promocode, UsedPromocode
 from .some_func import json_loader
 from products.bot.keyboards.inline_kb import choose_lang, about_us_menu_kb, menu_inline_kb, user_cart_edit, product_kb
-from products.bot.keyboards.kb import get_phone_num, menu_kb
-from products.bot.states import RegistrationState, StageOfOrderState
+from products.bot.keyboards.kb import get_phone_num, menu_kb, stage_order_delivery_kb, send_location_kb, \
+    confirm_location_kb
+from products.bot.states import RegistrationState, StageOfOrderState, PromocodeState
 from products.bot.locator import geolocators
 
 main_router = Router()
 
 ru = json_loader()['menu']['ru']
 uz = json_loader()['menu']['uz']
+
+user_location = {}
 
 
 # print(product_service.get_all_product())
@@ -175,44 +180,71 @@ def get_user_cart(user_id):
                 'quantity': item.quantity,
                 'total_price': item.total_price
             }
-
     user_cart_list = list(user_cart_dict.values())
     print(user_cart_list)
     return user_cart_list
+
+
+@sync_to_async
+def get_user_promocode_cart(user_id):
+    user_cart_items = UserCart.objects.filter(user_id=user_id)
+    if not user_cart_items.first().promocode:
+        return 0
+    user_promocode = Promocode.objects.filter(promocode_code=user_cart_items.first().promocode).first().discount
+    return user_promocode if user_promocode else 0
 
 
 async def user_cart_menu(lang: str, message=None, query=None):
     if message:
         user_cart = await get_user_cart(message.from_user.id)
         if user_cart:
+            discount = await get_user_promocode_cart(message.from_user.id)
+            print(discount)
             total_price_all = 0
             cart_text = "Ваши товары в корзине:\n" if lang == 'ru' else "Savatdagi mahsulotlaringiz:\n"
             for item in user_cart:
                 cart_text += f"{item['product_name']} - {item['quantity']} шт. - {item['total_price']} сум\n"
                 total_price_all += item['total_price']
-            await message.answer(
-                cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
-                reply_markup=user_cart_edit(lang, user_cart))
+
+            if discount > 0:
+                total_price_all -= total_price_all * (discount / 100)
+                await message.answer(
+                    cart_text + f"\n\nИтого: {total_price_all} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm {discount}% skidka bilan",
+                    reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart))
+            else:
+                await message.answer(
+                    cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
+                    reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart))
 
         else:
             cart_text = "Ваша корзина пуста" if lang == 'ru' else "Sizning savatingiz bo'sh"
 
-            await message.answer(cart_text, reply_markup=user_cart_edit(lang, user_cart))
+            await message.answer(cart_text,
+                                 reply_markup=user_cart_edit(lang, False, user_cart))
     elif query:
         user_cart = await get_user_cart(query.from_user.id)
+
         if user_cart:
+            discount = await get_user_promocode_cart(query.from_user.id)
             total_price_all = 0
             cart_text = "Ваши товары в корзине:\n" if lang == 'ru' else "Savatdagi mahsulotlaringiz:\n"
             for item in user_cart:
                 cart_text += f"{item['product_name']} - {item['quantity']} шт. - {item['total_price']} сум\n"
                 total_price_all += item['total_price']
-            await query.message.edit_text(
-                cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
-                reply_markup=user_cart_edit(lang, user_cart))
+            if discount > 0:
+                total_price_all -= total_price_all * (discount / 100)
+                await query.message.edit_text(
+                    cart_text + f"\n\nИтого: {total_price_all} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm {discount}% skidka bilan",
+                    reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart))
+            else:
+                await query.message.edit_text(
+                    cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
+                    reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart))
         else:
             cart_text = "Ваша корзина пуста" if lang == 'ru' else "Sizning savatingiz bo'sh"
 
-            await query.message.edit_text(cart_text, reply_markup=user_cart_edit(lang, user_cart))
+            await query.message.edit_text(cart_text,
+                                          reply_markup=user_cart_edit(lang, False, user_cart))
 
 
 @main_router.message(F.text.in_([ru['inline_keyboard_button']['cart'], uz['inline_keyboard_button']['cart']]))
@@ -233,12 +265,36 @@ async def choose_product(message: Message, state: FSMContext):
     lang = await get_lang(user_id)
     all_pr = await get_all_product()
     print(lang)
-
+    try:
+        is_order = True if user_location[user_id] else False
+        if is_order:
+            if lang == 'ru':
+                await message.answer("Выберите продукт", reply_markup=menu_kb(lang, is_order=True))
+                await message.answer(ru['choose_product_menu'], parse_mode="HTML",
+                                     reply_markup=product_kb(lang, all_pr))
+            else:
+                await message.answer("Выберите продукт", reply_markup=menu_kb(lang, is_order=True))
+                await message.answer(uz['choose_product_menu'], parse_mode="HTML",
+                                     reply_markup=product_kb(lang, all_pr))
+            return
+        else:
+            if lang == 'ru':
+                await message.answer("Заберите свой заказ самостоятельно 🙋 или выберите доставку 🚙",
+                                     reply_markup=stage_order_delivery_kb(lang))
+                await state.set_state(StageOfOrderState.get_delivery)
+            else:
+                await message.answer("Buyurtmangizni mustaqil olib keting 🙋‍ yoki yetkazish xizmatini tanlang 🚙",
+                                     reply_markup=stage_order_delivery_kb(lang))
+                await state.set_state(StageOfOrderState.get_delivery)
+    except KeyError:
+        pass
     if lang == 'ru':
-        await message.answer("Заберите свой заказ самостоятельно 🙋 или выберите доставку 🚙")
+        await message.answer("Заберите свой заказ самостоятельно 🙋 или выберите доставку 🚙",
+                             reply_markup=stage_order_delivery_kb(lang))
         await state.set_state(StageOfOrderState.get_delivery)
     else:
-        await message.answer("Buyurtmangizni mustaqil olib keting 🙋‍ yoki yetkazish xizmatini tanlang 🚙")
+        await message.answer("Buyurtmangizni mustaqil olib keting 🙋‍ yoki yetkazish xizmatini tanlang 🚙",
+                             reply_markup=stage_order_delivery_kb(lang))
         await state.set_state(StageOfOrderState.get_delivery)
 
 
@@ -247,9 +303,129 @@ async def get_delivery(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
     all_pr = await get_all_product()
-    if message.text == ru['inline_keyboard_button']['delivery']:
-        await message.answer("Пожалуйста, скиньте свой адрес" if lang == 'ru' else "Iltimos, manzilni yuboring")
+    if message.text == ru['inline_keyboard_button']['delivery'] or message.text == uz['inline_keyboard_button'][
+        'delivery']:
+        await message.answer("Пожалуйста, скиньте свой адрес" if lang == 'ru' else "Iltimos, manzilni yuboring",
+                             reply_markup=send_location_kb(lang))
         await state.set_state(StageOfOrderState.get_location)
-    elif message.text == uz['inline_keyboard_button']['pickup']:
-        await message.answer(ru['choose_product'] if lang == 'ru' else uz['choose_product'], reply_markup=product_kb(lang, all_pr))
+    elif message.text == uz['inline_keyboard_button']['pickup'] or message.text == ru['inline_keyboard_button'][
+        'pickup']:
+        user_location[user_id] = "biotact"
+        await message.answer("Выберите продукт" if lang == 'ru' else "Productni tanlang", reply_markup=menu_kb(lang))
+        await message.answer(ru['choose_product_menu'] if lang == 'ru' else uz['choose_product_menu'],
+                             parse_mode="HTML",
+                             reply_markup=product_kb(lang, all_pr))
+    elif message.text == uz['inline_keyboard_button']['back'] or message.text == ru['inline_keyboard_button']['back']:
+        await menu(lang=lang, message=message)
         await state.clear()
+
+
+@main_router.message(StageOfOrderState.get_location)
+async def get_location(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    if message.location:
+        longitude = message.location.longitude
+        latitude = message.location.latitude
+        location = geolocators(latitude, longitude)
+        await message.answer(f"Ваш адрес: {location}", reply_markup=confirm_location_kb(lang))
+        user_location[user_id] = location
+    if message.text == 'Подтвердить' or message.text == 'Tasdiqlash':
+        all_pr = await get_all_product()
+
+        if lang == 'ru':
+            await message.answer("Выберите продукт", reply_markup=menu_kb(lang))
+            await message.answer(ru['choose_product_menu'], parse_mode="HTML",
+                                 reply_markup=product_kb(lang, all_pr))
+        else:
+            await message.answer("Выберите продукт", reply_markup=menu_kb(lang))
+            await message.answer(uz['choose_product_menu'], parse_mode="HTML",
+                                 reply_markup=product_kb(lang, all_pr))
+        await state.clear()
+    if message.text == uz['inline_keyboard_button']['back'] or message.text == ru['inline_keyboard_button']['back']:
+        await state.clear()
+        await menu(lang=lang, message=message)
+
+
+@main_router.message(F.text == ru['inline_keyboard_button']['back'] or F.text == uz['inline_keyboard_button']['back'])
+async def back_to_menu(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    await state.clear()
+    await menu(lang=lang, message=message)
+
+
+@main_router.message(F.text.in_(["Начать заново", "рйцавпалофуцкпажшгв  2ауйцвдшноар    2уугнодйыпфчбмQayta boshlash"]))
+async def back_to_menu(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    await state.clear()
+    await menu(lang=lang, message=message)
+
+
+@sync_to_async
+def get_user_promocode(user_id=None, lang=None, promocode=None):
+    # Проверка, что промокод существует
+    if not Promocode.objects.filter(promocode_code=promocode).exists():
+        return "Такого промокода нету" if lang == 'ru' else 'Bu promokod mavjud emas'
+
+    # Проверка, что промокод уже был использован данным пользователем
+    if UsedPromocode.objects.filter(Q(promocode=promocode) & Q(user_id=user_id)).exists():
+        return "Такой промокод уже использован" if lang == 'ru' else 'Bu promokod avval foydalanilgan'
+
+    # Получение данных о промокоде
+    promocode_user = Promocode.objects.filter(promocode_code=promocode)
+    if promocode_user.exists():
+        return "Промокод активирован" if lang == 'ru' else 'Promokod aktivlashtirildi'
+    else:
+        return False
+
+
+@sync_to_async
+def update_user_cart(user_id, promocode):
+    UserCart.objects.filter(user_id=user_id).update(promocode=promocode)
+
+
+@main_router.message(PromocodeState.get_promocode)
+async def get_promocode(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    result = await get_user_promocode(user_id, lang, message.text)
+    await message.answer(result, reply_markup=menu_kb(lang, True))
+    await user_cart_menu(lang=lang, message=message)
+
+
+@sync_to_async
+def get_all_info(user_id):
+    user = UserTG.objects.get(user_tg_id=user_id)
+    return [user.phone_number, user.user_name]
+
+
+@main_router.message(F.text.in_(["Click", "Payme", "Теримнал/Карта", "Terminal/Karta",
+                                 "Наличные", "Naqd", ru['inline_keyboard_button']['back'],
+                                 uz['inline_keyboard_button']['back']]))
+async def payment(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    info = await get_all_info(user_id)
+    delivery_or = f"🚙 Доставка \n📍 {user_location[user_id]}\n\n" if user_location[user_id] else "📦 Самовывоз"
+    cart_text = f"""Имя: {info[1]}
+Телефон: {info[0]}
+Способ оплаты: 💳{message.text}
+Тип заказа: {delivery_or}"""
+    user_cart = await get_user_cart(message.from_user.id)
+    discount = await get_user_promocode_cart(message.from_user.id)
+    total_price_all = 0
+    for item in user_cart:
+        cart_text += f"{item['quantity']} x {item['product_name']} \n"
+        total_price_all += item['total_price']
+    if discount > 0:
+        total_price_all -= total_price_all * (discount / 100)
+        await message.answer(
+            cart_text + f"\n\nИтого: {total_price_all} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm {discount}% skidka bilan")
+    await message.answer(
+        cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
+        reply_markup=menu_kb(lang, False))
+    if message.text == ru['inline_keyboard_button']['back'] or message.text == uz['inline_keyboard_button']['back']:
+        await state.clear()
+        await user_cart_menu(lang=lang, message=message)
