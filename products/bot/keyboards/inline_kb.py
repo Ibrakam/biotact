@@ -1,4 +1,4 @@
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from ..handlers.some_func import json_loader
 from ...models import Product
@@ -35,7 +35,7 @@ def menu_inline_kb(lang: str) -> InlineKeyboardMarkup:
     return kb.as_markup()
 
 
-def product_kb(lang: str, all_pr: list = None) -> InlineKeyboardMarkup:
+def product_inline_kb(lang: str, all_pr: list = None) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     for i in all_pr:
         kb.button(text=i.product_name, callback_data=f"product_{i.id}")
@@ -115,3 +115,15 @@ def back_promocode(lang: str) -> InlineKeyboardMarkup:
     kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="from_promocode")
     kb.adjust(1)
     return kb.as_markup()
+
+
+def wb_button() -> InlineKeyboardMarkup:
+    web_app_url = 'http://127.0.0.1:8000/'  #
+    buttons = [
+        [
+            InlineKeyboardButton(text="Go to shop", web_app=WebAppInfo(url=web_app_url))
+        ]
+    ]
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    return keyboard

@@ -3,84 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             height: 100vh;
             margin: 0;
         }
 
         .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    padding: 20px;
+}
 
-        .product {
-            background-color: #fff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            margin: 20px;
-            transition: transform 0.3s, box-shadow 0.3s;
-            max-width: 300px;
-            width: 100%;
-            text-align: center;
-        }
+.product {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
-        .product:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
+.product:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
 
-        .photo_pr {
-            width: 100%;
-            height: auto;
-            transition: transform 0.3s;
-        }
+.image_container {
+    position: relative;
+    width: 100%;
+    padding-top: 75%; /* Соотношение сторон 4:3 */
+    overflow: hidden;
+}
 
-        .product:hover .photo_pr {
-            transform: scale(1.1);
-        }
+.photo_pr {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    transition: transform 0.3s;
+}
 
-        .pr_info {
-            font-size: 1.5em;
-            margin: 15px 0;
-            color: #333;
-        }
+.product:hover .photo_pr {
+    transform: scale(1.1);
+}
 
-        .pr_price {
-            font-size: 1.2em;
-            color: #888;
-            margin-bottom: 20px;
-        }
+.pr_info {
+    font-size: 1.2em;
+    margin: 15px 0;
+    color: #333;
+}
 
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .product {
-                max-width: 100%;
-                margin: 10px;
-            }
-        }
+.pr_price {
+    font-size: 1em;
+    color: #888;
+    margin-bottom: 20px;
+}
 
+/* Стили для кнопки */
+.product_btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 1em;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.product_btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+/* Адаптивность */
+<!--@media (max-width: 1024px) {-->
+<!--    .container {-->
+<!--        grid-template-columns: repeat(2, 1fr);-->
+<!--    }-->
+<!--}-->
+
+<!--@media (max-width: 768px) {-->
+<!--    .container {-->
+<!--        grid-template-columns: 1fr;-->
+<!--    }-->
+
+<!--    .navigation ul {-->
+<!--        flex-direction: column;-->
+<!--        align-items: center;-->
+<!--    }-->
+
+<!--    .navigation li {-->
+<!--        margin: 10px 0;-->
+<!--    }-->
+<!--}-->
+
+
+.header {
+    width: 100%;
+    background-color: #007bff;
+    color: white;
+    padding: 10px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo_image {
+    height: 50px;
+    margin-right: 10px;
+}
+
+.site_title {
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.navigation ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+}
+
+.navigation li {
+    margin: 0 15px;
+}
+
+.navigation a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.2em;
+}
+
+.navigation a:hover {
+    text-decoration: underline;
+}
+
+        .product_actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.update_cart {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 1em;
+    margin: 0 10px;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.update_cart:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
+.quantity {
+    font-size: 1.2em;
+    margin: 0 10px;
+}
+
+.cart {
+    width: 100%;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    text-align: center;
+}
 
     </style>
 </head>
 <body>
-<div class="container">
-    {% for product in products %}
-    <div class="product">
-        <img src="{{ product.product_image.url }}" class="photo_pr" alt="Product Image">
-        <h2 class="pr_info">{{ product.product_name }}</h2>
-        <p class="pr_price">{{ product.price }}</p>
+<header class="header">
+        <div class="logo">
+            <img src="media/product_images/2024-05-11 12.15.52.jpg" alt="Biotact Logo" class="logo_image">
+            <h1 class="site_title">Biotact</h1>
+        </div>
+        <nav class="navigation">
+            <ul>
+                <li><a href="">Продукты</a></li>
+                <li><a href="">Сеты</a></li>
+            </ul>
+        </nav>
+    </header>
+
+ <div class="container">
+        {% for product in products %}
+        <div class="product">
+            <div class="image_container">
+                <img src="{{ product.product_image.url }}" class="photo_pr" alt="Product Image">
+            </div>
+            <h2 class="pr_info">{{ product.product_name }}</h2>
+            <p class="pr_price">{{ product.price }} сум</p>
+            <div class="product_actions">
+                <button class="update_cart" data-product-id="{{ product.id }}" data-action="remove">-</button>
+                <span class="quantity" id="quantity-{{ product.id }}">0</span>
+                <button class="update_cart" data-product-id="{{ product.id }}" data-action="add">+</button>
+            </div>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
+
+    <div class="cart">
+        <h2>Ваша корзина</h2>
+        <p id="cart_total_items">Товаров в корзине: 0</p>
+        <!-- Additional cart details can be added here -->
+    </div>
+<script>
+        $(document).ready(function() {
+            $('.update_cart').on('click', function() {
+                const productId = $(this).data('product-id');
+                const action = $(this).data('action');
+
+                $.ajax({
+                    url: '{% url "update_cart" %}',
+                    method: 'POST',
+                    data: {
+                        'product_id': productId,
+                        'action': action,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            $('#quantity-' + productId).text(data.quantity);
+                            $('#cart_total_items').text('Товаров в корзине: ' + data.cart_total_items);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>

@@ -26,7 +26,7 @@ def menu_kb(lang='ru', is_order=False):
             KeyboardButton(text=ru['about_us'] if lang == 'ru' else uz['about_us'])
         ],
         [
-            KeyboardButton(text=ru['cart'] if lang == 'ru' else uz['cart']),
+            KeyboardButton(text=ru['leave_feedback'] if lang == 'ru' else uz['leave_feedback']),
             KeyboardButton(text="🇺🇿uz" if lang == 'ru' else "🇷🇺ru")
         ],
 
@@ -97,4 +97,32 @@ def payment_kb(lang: str):
     ]
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
+    return kb
+
+
+def product_kb(lang: str, all_pr: list = None) -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardBuilder()
+    for i in all_pr:
+        kb.add(KeyboardButton(text=i.product_name))
+    kb.add(KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back']))
+    kb.adjust(2)
+    return kb.as_markup()
+
+
+def category_product_menu(lang: str) -> ReplyKeyboardMarkup:
+    buttons = [
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back']),
+            KeyboardButton(text=ru['cart'] if lang == 'ru' else uz['cart'])
+        ],
+        [
+            KeyboardButton(text="Продукты" if lang == 'ru' else "Mahsulotlar"),
+            KeyboardButton(text="Сеты" if lang == 'ru' else "Setlar")
+        ],
+        [
+            KeyboardButton(text="Продукты" if lang == 'ru' else "Merch")
+        ]
+    ]
+
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
     return kb

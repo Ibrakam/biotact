@@ -20,6 +20,9 @@ class Product(models.Model):
     description_ru = models.TextField(blank=True)
     description_uz = models.TextField(blank=True)
     product_image = models.FileField(upload_to="product_images")
+    is_merchant = models.BooleanField(default=False)
+    is_set = models.BooleanField(default=False)
+    is_product = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

@@ -8,9 +8,10 @@ from django.db.models import Q
 
 from products.models import UserTG, UserCart, Product, Promocode, UsedPromocode
 from .some_func import json_loader
-from products.bot.keyboards.inline_kb import choose_lang, about_us_menu_kb, menu_inline_kb, user_cart_edit, product_kb
+from products.bot.keyboards.inline_kb import choose_lang, about_us_menu_kb, menu_inline_kb, user_cart_edit, product_inline_kb, \
+    wb_button
 from products.bot.keyboards.kb import get_phone_num, menu_kb, stage_order_delivery_kb, send_location_kb, \
-    confirm_location_kb
+    confirm_location_kb, product_kb
 from products.bot.states import RegistrationState, StageOfOrderState, PromocodeState
 from products.bot.locator import geolocators
 
@@ -26,34 +27,75 @@ user_location = {}
 
 async def menu(lang, message=None, query=None):
     if lang == 'ru':
-        if message:
-            # await message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'], parse_mode='HTML',
-            #                            reply_markup=menu_kb(lang))
-            await message.answer("Главное меню", reply_markup=menu_kb(lang))
-            await message.answer(ru['message_hello'], parse_mode='HTML',
-                                 reply_markup=menu_inline_kb(lang))
-        elif query:
-            await query.message.delete()
-            # await query.message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'],
-            #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
-            await query.message.answer("Главное меню", reply_markup=menu_kb(lang))
-            await query.message.answer(ru['message_hello'], parse_mode='HTML',
-                                       reply_markup=menu_inline_kb(lang))
-    elif lang == 'uz':
-        if message:
-            # await message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'], parse_mode='HTML',
-            #                            reply_markup=menu_kb(lang))
-            await message.answer("Bosh menyu", reply_markup=menu_kb(lang))
-            await message.answer(uz['message_hello'], parse_mode='HTML',
-                                 reply_markup=menu_inline_kb(lang))
+        try:
+            if message:
+                is_order = True if user_location[message.from_user.id] else False
+                print(message.text)
+                # await message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'], parse_mode='HTML',
+                #                            reply_markup=menu_kb(lang))
+                await message.answer("Главное меню", reply_markup=menu_kb(lang, is_order))
+                await message.answer(ru['message_hello'], parse_mode='HTML',
+                                     reply_markup=menu_inline_kb(lang))
+            elif query:
+                is_order = True if user_location[query.from_user.id] else False
 
-        elif query:
-            await query.message.delete()
-            # await query.message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'],
-            #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
-            await query.message.answer("Bosh menyu", reply_markup=menu_kb(lang))
-            await query.message.answer(uz['message_hello'], parse_mode='HTML',
-                                       reply_markup=menu_inline_kb(lang))
+                await query.message.delete()
+                # await query.message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'],
+                #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
+                await query.message.answer("Главное меню", reply_markup=menu_kb(lang, is_order))
+                await query.message.answer(ru['message_hello'], parse_mode='HTML',
+                                           reply_markup=menu_inline_kb(lang))
+        except Exception as e:
+            if message:
+                print(e)
+
+                # await message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'], parse_mode='HTML',
+                #                            reply_markup=menu_kb(lang))
+                await message.answer("Главное меню", reply_markup=menu_kb(lang))
+                await message.answer(ru['message_hello'], parse_mode='HTML',
+                                     reply_markup=menu_inline_kb(lang))
+            elif query:
+                await query.message.delete()
+                # await query.message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'],
+                #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
+                await query.message.answer("Главное меню", reply_markup=menu_kb(lang))
+                await query.message.answer(ru['message_hello'], parse_mode='HTML',
+                                           reply_markup=menu_inline_kb(lang))
+
+    elif lang == 'uz':
+        try:
+
+            if message:
+                is_order = True if user_location[message.from_user.id] else False
+                # await message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'], parse_mode='HTML',
+                #                            reply_markup=menu_kb(lang))
+                await message.answer("Bosh menyu", reply_markup=menu_kb(lang, is_order))
+                await message.answer(uz['message_hello'], parse_mode='HTML',
+                                     reply_markup=menu_inline_kb(lang))
+
+            elif query:
+                is_order = True if user_location[query.from_user.id] else False
+                await query.message.delete()
+                # await query.message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'],
+                #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
+                await query.message.answer("Bosh menyu", reply_markup=menu_kb(lang, is_order))
+                await query.message.answer(uz['message_hello'], parse_mode='HTML',
+                                           reply_markup=menu_inline_kb(lang))
+        except Exception as e:
+            if message:
+                # await message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'], parse_mode='HTML',
+                #                            reply_markup=menu_kb(lang))
+                await message.answer("Bosh menyu", reply_markup=menu_kb(lang))
+                await message.answer(uz['message_hello'], parse_mode='HTML',
+                                     reply_markup=menu_inline_kb(lang))
+
+            elif query:
+                await query.message.delete()
+                # await query.message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'],
+                #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
+                await query.message.answer("Bosh menyu", reply_markup=menu_kb(lang))
+                await query.message.answer(uz['message_hello'], parse_mode='HTML',
+                                           reply_markup=menu_inline_kb(lang))
 
 
 @sync_to_async
@@ -248,9 +290,20 @@ async def user_cart_menu(lang: str, message=None, query=None):
 
 
 @main_router.message(F.text.in_([ru['inline_keyboard_button']['cart'], uz['inline_keyboard_button']['cart']]))
-async def cart(message: Message):
+async def cart(message: Message, state: FSMContext):
     lang = await get_lang(message.from_user.id)
-    await user_cart_menu(message=message, lang=lang)
+    try:
+        if user_location[message.from_user.id]:
+            await user_cart_menu(message=message, lang=lang)
+        else:
+            await message.answer("Давайте начнем заказ" if lang == 'ru' else "Buyurtmani boshlaymiz",
+                                 reply_markup=stage_order_delivery_kb(lang))
+            await state.set_state(StageOfOrderState.get_delivery)
+    except Exception as e:
+        print(e)
+        await message.answer("Давайте начнем заказ" if lang == 'ru' else "Buyurtmani boshlaymiz",
+                             reply_markup=stage_order_delivery_kb(lang))
+        await state.set_state(StageOfOrderState.get_delivery)
 
 
 @sync_to_async
@@ -311,10 +364,13 @@ async def get_delivery(message: Message, state: FSMContext):
     elif message.text == uz['inline_keyboard_button']['pickup'] or message.text == ru['inline_keyboard_button'][
         'pickup']:
         user_location[user_id] = "biotact"
-        await message.answer("Выберите продукт" if lang == 'ru' else "Productni tanlang", reply_markup=menu_kb(lang))
+        # await message.answer("""Закажите через новое удобное меню 👇😉""", reply_markup=wb_button())
+        await message.answer("Выберите продукт" if lang == 'ru' else "Productni tanlang",
+                             reply_markup=menu_kb(lang, is_order=True))
         await message.answer(ru['choose_product_menu'] if lang == 'ru' else uz['choose_product_menu'],
                              parse_mode="HTML",
                              reply_markup=product_kb(lang, all_pr))
+        await state.clear()
     elif message.text == uz['inline_keyboard_button']['back'] or message.text == ru['inline_keyboard_button']['back']:
         await menu(lang=lang, message=message)
         await state.clear()
@@ -355,11 +411,12 @@ async def back_to_menu(message: Message, state: FSMContext):
     await menu(lang=lang, message=message)
 
 
-@main_router.message(F.text.in_(["Начать заново", "рйцавпалофуцкпажшгв  2ауйцвдшноар    2уугнодйыпфчбмQayta boshlash"]))
+@main_router.message(F.text.in_(["Начать заказ заново", "Buyurtma qayta boshlash"]))
 async def back_to_menu(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
-    await state.clear()
+    print(lang, user_id)
+    user_location.pop(user_id)
     await menu(lang=lang, message=message)
 
 
@@ -376,6 +433,7 @@ def get_user_promocode(user_id=None, lang=None, promocode=None):
     # Получение данных о промокоде
     promocode_user = Promocode.objects.filter(promocode_code=promocode)
     if promocode_user.exists():
+        UserCart.objects.filter(user_id=user_id).update(promocode=promocode_user.first().promocode_code)
         return "Промокод активирован" if lang == 'ru' else 'Promokod aktivlashtirildi'
     else:
         return False
@@ -391,6 +449,7 @@ async def get_promocode(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
     result = await get_user_promocode(user_id, lang, message.text)
+    await state.clear()
     await message.answer(result, reply_markup=menu_kb(lang, True))
     await user_cart_menu(lang=lang, message=message)
 
@@ -399,6 +458,12 @@ async def get_promocode(message: Message, state: FSMContext):
 def get_all_info(user_id):
     user = UserTG.objects.get(user_tg_id=user_id)
     return [user.phone_number, user.user_name]
+
+
+@sync_to_async
+def delete_user_cart(user_id):
+    UserCart.objects.filter(user_id=user_id).delete()
+    return True
 
 
 @main_router.message(F.text.in_(["Click", "Payme", "Теримнал/Карта", "Terminal/Karta",
@@ -423,9 +488,16 @@ async def payment(message: Message, state: FSMContext):
         total_price_all -= total_price_all * (discount / 100)
         await message.answer(
             cart_text + f"\n\nИтого: {total_price_all} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm {discount}% skidka bilan")
-    await message.answer(
-        cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
-        reply_markup=menu_kb(lang, False))
+    else:
+        await message.answer(
+            cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm",
+            reply_markup=menu_kb(lang, False))
+    await message.bot.send_message(889121031,
+                                   cart_text + f"\n\nИтого: {total_price_all} сум" if lang == 'ru' else f"\n\nJami: {total_price_all} so'm")
+    user_location.pop(user_id)
+    info = await delete_user_cart(user_id)
+    print("good" if info else "bad")
+    await menu(lang, message)
     if message.text == ru['inline_keyboard_button']['back'] or message.text == uz['inline_keyboard_button']['back']:
         await state.clear()
         await user_cart_menu(lang=lang, message=message)

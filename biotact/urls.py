@@ -19,16 +19,14 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 
-
 import products
 from products import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.product_list, name='product_list'),
-    path('add_to_cart/<int:product_id>/', views.add_to_cart, name='add_to_cart'),
-    path('confirm_order/', views.confirm_order, name='confirm_order'),
+    path('product/<int:product_id>/', views.product_detail, name='product_detail'),
+    path('update_cart/', views.update_cart, name='update_cart'),
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-

@@ -7,7 +7,8 @@
       "message_reg_phone": "Теперь скиньте номер",
       "message_promocode": "Введите промокод",
       "inline_keyboard_button": {
-       "choose_product": "\uD83D\uDCD6 Выбрать продукт",
+       "choose_product": "\uD83D\uDCD6 Заказать",
+        "leave_feedback": "Оставить отзыв",
         "about_us": "\uD83D\uDCDD О нас",
         "public_offer": "\uD83D\uDCDE Публичная оферта",
         "cart": "\uD83D\uDCB3 Корзина",
@@ -32,6 +33,7 @@
       "message_promocode": "Promokod kiritish",
       "inline_keyboard_button": {
         "choose_product": "\uD83D\uDCD6 Buyurtma berish",
+        "leave_feedback": "Otziv qoldirish",
         "about_us": "\uD83D\uDCDD Biz haqimizda",
         "public_offer": "\uD83D\uDCDE Ommaviy oferta",
         "cart": "\uD83D\uDCB3 Savatim",
@@ -41,7 +43,8 @@
         "delivery": "Yetkazib berish",
         "back": "Orqaga",
         "send_location": "Manzilni jo’natish",
-        "re-order": "Buyurtma qayta boshlash"
+        "re-order": "Buyurtma qayta boshlash",
+
 
       },
       "choose_product_menu": "<b>Buyurtma berishga tayyormisiz? Uni to'ldiring va biz mahsulotingizni to'g'ridan-to'g'ri sizga yetkazib beramiz.\n<blockquote>❗\uFE0F Toshkent shahri bo'ylab yetkazib berish - 30 000 so'm (24 soat ichida)\n❗\uFE0F O'zbekiston Respublikasi bo'ylab yetkazib berish (narx joylashuviga qarab o'zgaradi)</blockquote>\n\nQulay to'lov usulini tanlang:\n\n• Tovarni olgandan keyin karta (HUMO/UZCARD) orqali to'lash\n• Tovarni olgandan keyin naqd pulda to'lash\n\n \uD83D\uDC47Mahsulotlarni tanlang\uD83D\uDC47</b>",

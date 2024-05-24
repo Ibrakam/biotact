@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from products.bot.keyboards.kb import payment_kb
 from products.bot.states import RegistrationState, PromocodeState
 from products.bot.handlers.some_func import json_loader
-from products.bot.keyboards.inline_kb import product_kb, product_menu_kb, about_us_menu_kb, back_promocode
+from products.bot.keyboards.inline_kb import product_inline_kb, product_menu_kb, about_us_menu_kb, back_promocode
 from products.bot.handlers.bot_commands import menu, user_cart_menu
 from products.models import UserTG, Product, UserCart
 
@@ -99,10 +99,10 @@ async def choose_product(query: CallbackQuery):
     print(lang)
     if lang == 'ru':
         await query.message.delete()
-        await query.message.answer(ru['choose_product_menu'], parse_mode="HTML", reply_markup=product_kb(lang, all_pr))
+        await query.message.answer(ru['choose_product_menu'], parse_mode="HTML", reply_markup=product_inline_kb(lang, all_pr))
     else:
         await query.message.delete()
-        await query.message.answer(uz['choose_product_menu'], parse_mode="HTML", reply_markup=product_kb(lang, all_pr))
+        await query.message.answer(uz['choose_product_menu'], parse_mode="HTML", reply_markup=product_inline_kb(lang, all_pr))
 
 
 @callback_router.callback_query(F.data == "menu")
