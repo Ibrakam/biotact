@@ -7,23 +7,32 @@
       "message_reg_phone": "Теперь скиньте номер",
       "message_promocode": "Введите промокод",
       "inline_keyboard_button": {
-       "choose_product": "\uD83D\uDCD6 Заказать",
-        "leave_feedback": "Оставить отзыв",
+       "choose_product": "\uD83D\uDECDЗаказать",
+        "leave_feedback": "✍Оставить отзыв",
         "about_us": "\uD83D\uDCDD О нас",
-        "public_offer": "\uD83D\uDCDE Публичная оферта",
-        "cart": "\uD83D\uDCB3 Корзина",
+        "public_offer": "\uD83D\uDCC4 Публичная оферта",
+        "cart": "\uD83D\uDCE5 Корзина",
         "promocode": "Ввести промокод",
         "order": "Оформить заказ",
-        "pickup": "Самовывоз",
-        "delivery": "Доставка",
-        "back": "Назад",
-        "send_location": "Отправить местоположение",
-        "re-order": "Начать заказ заново"
+        "pickup": "\uD83D\uDE4BСамовывоз",
+        "delivery": "\uD83D\uDE99Доставка",
+        "back": "◀\uFE0FНазад",
+        "send_location": "\uD83D\uDCCDОтправить местоположение",
+        "re-order": "Начать заказ заново",
+        "settings": "⚙\uFE0FНастройки",
+        "promotion": "\uD83C\uDF89Акции",
+        "my_orders": "\uD83D\uDCCBМои заказы",
+        "supp_phone_num": "Пропустить"
 
       },
-      "choose_product_menu": "<b>Готовы сделать заказ? Оформите его, и мы доставим ваш товар прямо к вам \n<blockquote>❗\uFE0F Доставка по городу Ташкент - 30.000 сум (в течении 24 часов)\n❗\uFE0F Доставка по Республике Узбекистан (цена меняется в зависимости от локации)</blockquote>\n\nВыберите удобный способ оплаты:\n\n• Оплата картой (HUMO/UZCARD) при получении товара\n• Оплата наличными при получении товара\n\n \uD83D\uDC47Выберите продукцию\uD83D\uDC47</b>",
+      "choose_product_menu_1": "<b>Готовы сделать заказ? Оформите его, и мы доставим ваш товар прямо к вам \n \uD83D\uDC47Выберите продукцию\uD83D\uDC47</b>",
       "about_us_menu": "<b>BIOTACT DEUTSCHLAND</b>  - ваш надежный партнер в мире инновационных пробиотиков и витаминно-минеральных \nкомплексов. Мы вносим инновации и немецкое качество в каждый дом, предоставляя вам и вашей семье лучшее для здоровья.\n<blockquote>• Головной офис BIOTACT DEUTSCHLAND находится в Германии, в городе Бонн.\n• 19 лет / Продукция известна в Узбекистане.\n• 8 млн / Проданных упаковок.\n• Инновационные формулы.\n• Команда высококлассных специалистов и профессионалов в области медицины, биологии и химии.\n• Собственная сертифицированная лаборатория.\n• Международные стандарты ISO 9001 и ISO 22000 от немецкого органа DQS.\n• Членство в NEM e.V.- Европейской ассоциации производителей и дистрибьютеров нутрицевтиков и продуктов для здоровья.\n• 100% натуральная и безопасная продукция, без искусственных добавок и аллергенов.\n• Подходит для всех возрастных групп: детей, взрослых, пожилых, беременных и кормящих.\n• Гарантированное немецкое качество.</blockquote>",
-      "which_payment": "Какой способ оплаты?"
+      "which_payment": "Какой способ оплаты?",
+      "supp_phone_num": "Введите дополнительные номер телефона в формате +998*********",
+      "successful_payment": "Оплата прошла успешно",
+      "terms_text": "Условия оплаты и использования:\n\n1. Все платежи не подлежат возврату.\n2. Пожалуйста, убедитесь, что все предоставленные данные верны.\n3. Мы не несем ответственности за ошибки, вызванные неправильно введенными данными.\n4. Пожалуйста, свяжитесь с нашей поддержкой для любых вопросов или проблем.\n\nБлагодарим за использование наших услуг!",
+      "promotions": "На данный момент, акций нет.\nВ скором времени они появятся \uD83C\uDF3F",
+      "choose_product_menu": "\uD83D\uDE0AДавайте продолжим!\nВыберите категорию:\n"
     },
     "uz": {
       "message_hello": "<b>\uD83C\uDDE9\uD83C\uDDEA Biotact Deutschland onlayn-do'koniga xush kelibsiz!</b>\n\n<blockquote>Bu erda siz butun oila uchun probiyotiklar va vitamin-mineral komplekslarni xarid qilishingiz mumkin.\n\nBiz nemis sifatiga kafolat beramiz. Germaniya DQS organi tomonidan sertifikatlangan ISO 9001 va ISO 22000 HACCP xalqaro standartlari, shuningdek, o'z laboratoriyamiz mahsulotimiz sifati va xavfsizligi kafolati hisoblanadi.</blockquote>\n",
@@ -32,24 +41,32 @@
       "message_reg_phone": "Telefon raqamingizni kiriting",
       "message_promocode": "Promokod kiritish",
       "inline_keyboard_button": {
-        "choose_product": "\uD83D\uDCD6 Buyurtma berish",
-        "leave_feedback": "Otziv qoldirish",
+        "choose_product": "\uD83D\uDECDBuyurtma berish",
+        "leave_feedback": "✍Otziv qoldirish",
         "about_us": "\uD83D\uDCDD Biz haqimizda",
-        "public_offer": "\uD83D\uDCDE Ommaviy oferta",
-        "cart": "\uD83D\uDCB3 Savatim",
+        "public_offer": "\uD83D\uDCC4 Ommaviy oferta",
+        "cart": "\uD83D\uDCE5 Savatim",
         "promocode": "Promokod kiritish",
         "order": "Buyurtma berish",
-        "pickup": "Olib ketish",
-        "delivery": "Yetkazib berish",
-        "back": "Orqaga",
-        "send_location": "Manzilni jo’natish",
+        "pickup": "\uD83D\uDE4BOlib ketish",
+        "delivery": "\uD83D\uDE99Yetkazib berish",
+        "back": "◀\uFE0FOrqaga",
+        "send_location": "\uD83D\uDCCDManzilni jo’natish",
         "re-order": "Buyurtma qayta boshlash",
-
+        "settings": "⚙\uFE0FSozlamalar",
+        "promotion": "\uD83C\uDF89Aksiyalar",
+        "my_orders": "\uD83D\uDCCBMening buyurtmalarim",
+        "supp_phone_num": "Otkazish"
 
       },
-      "choose_product_menu": "<b>Buyurtma berishga tayyormisiz? Uni to'ldiring va biz mahsulotingizni to'g'ridan-to'g'ri sizga yetkazib beramiz.\n<blockquote>❗\uFE0F Toshkent shahri bo'ylab yetkazib berish - 30 000 so'm (24 soat ichida)\n❗\uFE0F O'zbekiston Respublikasi bo'ylab yetkazib berish (narx joylashuviga qarab o'zgaradi)</blockquote>\n\nQulay to'lov usulini tanlang:\n\n• Tovarni olgandan keyin karta (HUMO/UZCARD) orqali to'lash\n• Tovarni olgandan keyin naqd pulda to'lash\n\n \uD83D\uDC47Mahsulotlarni tanlang\uD83D\uDC47</b>",
+      "choose_product_menu_1": "<b>Buyurtma berishga tayyormisiz? Uni to'ldiring va biz mahsulotingizni to'g'ridan-to'g'ri sizga yetkazib beramiz.\n\uD83D\uDC47Mahsulotlarni tanlang\uD83D\uDC47</b>",
       "about_us_menu": "<b>BIOTACT DEUTSCHLAND</b> - innovatsion probiotiklar hamda vitamin va minerallar komplekslari olamida sizning ishonchli \nhamkoringiz. Biz innovatsiyalar va nemis sifatini har bir uyga olib kirishimiz bilan siz va oilangiz salomatligi uchun eng \nyaxshisini taqdim etamiz.\n\n<blockquote>• BIOTACT DEUTSCHLANDning bosh ofisi Germaniyaning Bonn shahrida joylashgan. \n• 19 yil / Mahsulot Oʻzbekistonda tanilgan. \n• 8 mln / Sotilgan qadoqlar.\n• Innovatsion formulalar.\n• Tibbiyot, biologiya va kimyo sohasida yuqori malakali mutaxassis va professionallar jamoasi.\n• Oʻz serkifikatlashtirilgan laboratoriyamiz.\n• Nemis organi DQS tomonidan ISO 9001 va ISO 22000 xalqaro standartlari.\n• NEM e.V. aʼzosi – Yevropaning salomatlik uchun turli mahsulotlar va nutritsevtiklar ishlab chiqaruvchilari va distribyuterlari assotsiatsiyasi.\n• sunʼiy qoʻshimcha va allergenlarsiz, 100% tabiiy va xavfsiz mahsulot.\n• Barcha yosh guruhidagilarga mos keladi: bolalar, kattalar, keksalar, homilador va \n emizikli ayollar. \n• Kafolatlangan nemis sifati.</blockquote>",
-      "which_payment": "Qaysi to’lov usulini tanlang?"
+      "which_payment": "Qaysi to’lov usulini tanlang?",
+      "supp_phone_num": "Telefon raqamingizni +998********* formatda kiritng",
+      "successful_payment": "successful_payment",
+      "terms_text": "To'lov va foydalanish shartlari:\n\n1. Barcha to'lovlar qaytarilmaydi.\n2. Iltimos, barcha taqdim etilgan ma'lumotlarning to'g'riligiga ishonch hosil qiling.\n3. Noto'g'ri kiritilgan ma'lumotlar sabab bo'lgan xatolar uchun javobgar emasmiz.\n4. Iltimos, har qanday savol yoki muammolar bo'yicha qo'llab-quvvatlash xizmatimizga murojaat qiling.\n\nXizmatlarimizdan foydalanganingiz uchun rahmat!",
+      "promotions": "Ayni paytda aksiyalar mavjud emas. Ular tez orada paydo bo'ladi \uD83C\uDF3F",
+      "choose_product_menu": "\uD83D\uDE0A Davom etamiz! \nKategoriya tanlang:"
     }
   }
 }

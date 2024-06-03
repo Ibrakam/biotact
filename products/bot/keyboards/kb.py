@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import pytz
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
@@ -18,22 +21,26 @@ def get_phone_num(lang='ru'):
     return kb
 
 
-def menu_kb(lang='ru', is_order=False):
-    order = KeyboardButton(text=ru['re-order'] if lang == 'ru' else uz['re-order'])
+def menu_kb(lang: str = 'ru'):
     buttons = [
         [
             KeyboardButton(text=ru['choose_product'] if lang == 'ru' else uz['choose_product']),
-            KeyboardButton(text=ru['about_us'] if lang == 'ru' else uz['about_us'])
+
         ],
         [
-            KeyboardButton(text=ru['leave_feedback'] if lang == 'ru' else uz['leave_feedback']),
-            KeyboardButton(text="🇺🇿uz" if lang == 'ru' else "🇷🇺ru")
+            KeyboardButton(text=ru['promotion'] if lang == 'ru' else uz['promotion']),
+            KeyboardButton(text=ru['leave_feedback'] if lang == 'ru' else uz['leave_feedback'])
         ],
+        [
+            KeyboardButton(text=ru['my_orders'] if lang == 'ru' else uz['my_orders']),
+            KeyboardButton(text=ru['settings'] if lang == 'ru' else uz['settings'])
+        ],
+        [
+            KeyboardButton(text=ru['about_us'] if lang == 'ru' else uz['about_us']),
+        ]
 
     ]
 
-    if is_order:
-        buttons.append([order])
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
     return kb
 
@@ -100,11 +107,28 @@ def payment_kb(lang: str):
     return kb
 
 
+def choose_time_kb(lang: str):
+    buttons = [
+        [
+            KeyboardButton(text="Ближайшее время" if lang == "ru" else "Tez orada"),
+            KeyboardButton(text="На время" if lang == "ru" else "Bir muddat"),
+        ],
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+
+    return kb
+
+
 def product_kb(lang: str, all_pr: list = None) -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
+    kb.add(KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back']))
+    kb.add(KeyboardButton(text=ru['cart'] if lang == 'ru' else uz['cart']))
     for i in all_pr:
         kb.add(KeyboardButton(text=i.product_name))
-    kb.add(KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back']))
+
     kb.adjust(2)
     return kb.as_markup()
 
@@ -116,12 +140,142 @@ def category_product_menu(lang: str) -> ReplyKeyboardMarkup:
             KeyboardButton(text=ru['cart'] if lang == 'ru' else uz['cart'])
         ],
         [
-            KeyboardButton(text="Продукты" if lang == 'ru' else "Mahsulotlar"),
-            KeyboardButton(text="Сеты" if lang == 'ru' else "Setlar")
+            KeyboardButton(text="Продукция" if lang == 'ru' else "Mahsulotlar"),
+            KeyboardButton(text="Эксклюзивные сеты" if lang == 'ru' else "Ekskluziv Setlar")
         ],
         [
-            KeyboardButton(text="Продукты" if lang == 'ru' else "Merch")
+            KeyboardButton(text="Мерч" if lang == 'ru' else "Merch")
         ]
+    ]
+
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def product_edit_menu(lang: str) -> ReplyKeyboardMarkup:
+    buttons = [
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back']),
+            KeyboardButton(text=ru['cart'] if lang == 'ru' else uz['cart'])
+        ]
+    ]
+
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def product_back_to_category(lang: str):
+    buttons = [
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def get_supp_phone_num(lang: str) -> ReplyKeyboardMarkup:
+    buttons = [
+        [
+            KeyboardButton(text=ru["supp_phone_num"] if lang == "ru" else uz["supp_phone_num"])
+        ],
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def leave_feedback_kb(lang: str):
+    buttons = [
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def settings_kb(lang: str, birth: str = None):
+    buttons = [
+        [
+            KeyboardButton(text="🇺🇿Ozbekchaga o'zgartirish" if lang == 'ru' else "🇷🇺Поменять на русский"),
+            KeyboardButton(
+                text=("Добавить день рождение" if lang == "ru" else "Tug'ilgan kunini qo'shish") if birth is None else (
+                    "Изменить день рождения" if lang == "ru" else "Tug'ilgan kunini o'zgartirish")),
+        ],
+        [
+            KeyboardButton(text="Изменить номер телефона" if lang == "ru" else "Telefon raqamini o'zgartirish"),
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def phone_number_kb(lang: str):
+    buttons = [
+        [
+            KeyboardButton(text="Отправить свой номер телефона📞" if lang == "ru" else "Telefon raqamini yuborish📞",
+                           request_contact=True)
+        ],
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def birthday_kb(lang: str):
+    buttons = [
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def generate_time_buttons(lang: str):
+    now = datetime.now(tz=pytz.timezone('Asia/Tashkent'))
+    buttons = [[
+        KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+    ]]
+    current_hour = 10
+    if current_hour == 24:
+        current_hour = 0
+
+    for hour in range(current_hour, 21):
+        time_str = f"{hour:02d}:00"
+        buttons.append([KeyboardButton(text=time_str)])
+
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return keyboard
+
+
+def dop_phone_num(lang: str) -> ReplyKeyboardMarkup:
+    buttons = [
+        [
+            KeyboardButton(text=ru['supp_phone_num'] if lang == "ru" else uz["supp_phone_num"])
+        ],
+        [
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+    return kb
+
+
+def pass_kb(lang: str):
+    buttons = [
+            [
+                KeyboardButton(text=ru['supp_phone_num'] if lang == "ru" else uz["supp_phone_num"])
+            ]
     ]
 
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)

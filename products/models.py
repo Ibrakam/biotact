@@ -1,18 +1,6 @@
 from django.db import models
 
 
-class CategoryProducts(models.Model):
-    name = models.CharField(max_length=50, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.name
-
-    class Meta:
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
-
-
 # Create your models here.
 class Product(models.Model):
     product_name = models.CharField(max_length=50, blank=True)
@@ -20,7 +8,7 @@ class Product(models.Model):
     description_ru = models.TextField(blank=True)
     description_uz = models.TextField(blank=True)
     product_image = models.FileField(upload_to="product_images")
-    is_merchant = models.BooleanField(default=False)
+    is_merch = models.BooleanField(default=False)
     is_set = models.BooleanField(default=False)
     is_product = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -38,6 +26,7 @@ class UserTG(models.Model):
     user_name = models.CharField(max_length=50, blank=True, null=True)
     phone_number = models.CharField(max_length=50, blank=True, null=True)
     lang = models.CharField(default="ru", null=True, max_length=10)
+    birthday = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -59,6 +48,7 @@ class UsedPromocode(models.Model):
     class Meta:
         verbose_name = 'Использованный промокод'
         verbose_name_plural = 'Использованные промокоды'
+
 
 class Promocode(models.Model):
     promocode_code = models.CharField(max_length=50, blank=True, null=True)
@@ -86,3 +76,27 @@ class UserCart(models.Model):
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзины'
+
+
+class MyOrders(models.Model):
+    user_id = models.BigIntegerField(blank=True, null=True)
+    order_text = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.order_text) if self.order_text else "No Product"
+
+    class Meta:
+        verbose_name = 'Заказ'
+        verbose_name_plural = 'Заказы'
+
+
+class UserAddress(models.Model):
+    user_id = models.BigIntegerField(blank=True, null=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.address) if self.address else "No Product"
+
+    class Meta:
+        verbose_name = 'Адрес'
+        verbose_name_plural = 'Адреса'

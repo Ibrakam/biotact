@@ -6,10 +6,12 @@ from aiogram.types import CallbackQuery, FSInputFile
 from asgiref.sync import sync_to_async
 from django.shortcuts import get_object_or_404
 
-from products.bot.keyboards.kb import payment_kb
-from products.bot.states import RegistrationState, PromocodeState
+from products.bot.keyboards.kb import payment_kb, category_product_menu, menu_kb, product_back_to_category, \
+    dop_phone_num, pass_kb
+from products.bot.states import RegistrationState, PromocodeState, StageOfOrderState
 from products.bot.handlers.some_func import json_loader
-from products.bot.keyboards.inline_kb import product_inline_kb, product_menu_kb, about_us_menu_kb, back_promocode
+from products.bot.keyboards.inline_kb import product_inline_kb, product_menu_kb, about_us_menu_kb, back_promocode, \
+    choose_payment_kb
 from products.bot.handlers.bot_commands import menu, user_cart_menu
 from products.models import UserTG, Product, UserCart
 
@@ -63,7 +65,8 @@ async def product_menu(query, product_id):
         await query.message.answer_photo(
             photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
-                    f"{product.price} сум\n\n{product.description_ru}",
+                    f"{product.price} сум\n\n{product.description_ru}"
+                    "\n\n",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
     else:
         await query.message.delete()
@@ -91,18 +94,20 @@ def get_all_product():
     return products
 
 
-@callback_router.callback_query(F.data == 'choose_product')
-async def choose_product(query: CallbackQuery):
-    user_id = query.from_user.id
-    lang = await get_lang(user_id)
-    all_pr = await get_all_product()
-    print(lang)
-    if lang == 'ru':
-        await query.message.delete()
-        await query.message.answer(ru['choose_product_menu'], parse_mode="HTML", reply_markup=product_inline_kb(lang, all_pr))
-    else:
-        await query.message.delete()
-        await query.message.answer(uz['choose_product_menu'], parse_mode="HTML", reply_markup=product_inline_kb(lang, all_pr))
+# @callback_router.callback_query(F.data == 'choose_product')
+# async def choose_product(query: CallbackQuery):
+#     user_id = query.from_user.id
+#     lang = await get_lang(user_id)
+#     all_pr = await get_all_product()
+#     print(lang)
+#     if lang == 'ru':
+#         await query.message.delete()
+#         await query.message.answer(ru['choose_product_menu'], parse_mode="HTML",
+#                                    reply_markup=product_inline_kb(lang, all_pr))
+#     else:
+#         await query.message.delete()
+#         await query.message.answer(uz['choose_product_menu'], parse_mode="HTML",
+#                                    reply_markup=product_inline_kb(lang, all_pr))
 
 
 @callback_router.callback_query(F.data == "menu")
@@ -117,6 +122,7 @@ async def get_user_product_count(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
     lang = await get_lang(user_id)
     data = await state.get_data()
+    all_pr = await get_all_product()
     users = data['user']
     #     # Если пользователь нажал на +
     if query.data == 'increment':
@@ -141,7 +147,9 @@ async def get_user_product_count(query: CallbackQuery, state: FSMContext):
         result = await add_to_cart(user_id=user_id, product_id=user_product, quantity=product_count, promocode=None)
         await query.message.bot.answer_callback_query(query.id, text='Товар добавлен в корзину', show_alert=True)
         await state.clear()
-        await choose_product(query)
+        await state.set_state(StageOfOrderState.choose_product)
+        await query.message.delete()
+        await query.message.answer("Рекомендованные товары:" if lang == "ru" else "Tavsiya etilgan mahsulotlar", reply_markup=product_inline_kb(lang, all_pr))
 
 
 @callback_router.callback_query(F.data.startswith('product_'))
@@ -194,6 +202,7 @@ async def write_promocode(query: CallbackQuery, state: FSMContext):
 
     await state.set_state(PromocodeState.get_promocode)
 
+
 @callback_router.callback_query(F.data == "from_promocode")
 async def root(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
@@ -207,5 +216,29 @@ async def root(query: CallbackQuery, state: FSMContext):
     user_id = query.from_user.id
     lang = await get_lang(user_id)
     await query.message.delete()
-    await query.message.answer(ru["which_payment"] if lang == "ru" else uz["which_payment"], reply_markup=payment_kb(lang))
-    await state.clear()
+    await query.message.answer(ru["supp_phone_num"] if lang == "ru" else uz["supp_phone_num"],
+                               reply_markup=dop_phone_num(lang))
+    await state.set_state(StageOfOrderState.user_cart)
+
+
+@callback_router.callback_query(F.data.in_(["cash", "Payme", "Click", "Terminal"]))
+async def root(query: CallbackQuery, state: FSMContext):
+    user_id = query.from_user.id
+    lang = await get_lang(user_id)
+    await state.set_data({"payment": {user_id: query.data}})
+    await query.message.delete()
+    await query.message.answer("Добавьте комментарий" if lang == "ru" else "Izoh qoldiring", reply_markup=pass_kb(lang))
+
+
+
+
+
+@callback_router.callback_query(F.data.in_(['back_to_category', 'continue']))
+async def root(query: CallbackQuery, state: FSMContext):
+    user_id = query.from_user.id
+    lang = await get_lang(user_id)
+    await state.set_state(StageOfOrderState.start_order)
+    await query.message.delete()
+    await query.message.answer(ru['choose_product_menu'] if lang == 'ru' else uz['choose_product_menu'],
+                               parse_mode="HTML",
+                               reply_markup=category_product_menu(lang))
