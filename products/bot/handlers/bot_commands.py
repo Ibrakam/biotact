@@ -10,16 +10,16 @@ from aiogram.types import Message, FSInputFile, ReplyKeyboardRemove, CallbackQue
 from aiogram.filters import CommandStart, Command
 from django.db.models import Q
 
-from products.models import UserTG, UserCart, Product, Promocode, UsedPromocode, MyOrders
+from products.models import UserTG, UserCart, Product, Promocode, UsedPromocode, MyOrders, UserAddress
 from .some_func import json_loader
 from products.bot.keyboards.inline_kb import choose_lang, about_us_menu_kb, menu_inline_kb, user_cart_edit, \
     product_inline_kb, \
     wb_button, product_menu_kb, choose_payment_kb, confirm_order_kb, builder_inline_mk, OrderCallback
 from products.bot.keyboards.kb import get_phone_num, menu_kb, stage_order_delivery_kb, send_location_kb, \
     confirm_location_kb, product_kb, category_product_menu, product_edit_menu, product_back_to_category, \
-    leave_feedback_kb, settings_kb, phone_number_kb, birthday_kb, choose_time_kb, generate_time_buttons
+    leave_feedback_kb, settings_kb, phone_number_kb, birthday_kb, choose_time_kb, generate_time_buttons, location_kb
 from products.bot.states import RegistrationState, StageOfOrderState, PromocodeState, LeaveFeedback, PromotionState, \
-    SettingsState, TimeState
+    SettingsState, TimeState, MailingState
 from products.bot.locator import geolocators
 from dotenv import dotenv_values
 
@@ -40,7 +40,7 @@ user_location = {}
 finally_order = {}
 broadcast_router = Router()
 
-admins = [889121031, ADMIN_ID]
+admins = [889121031, -4276762392, 1249487413]
 
 
 @sync_to_async
@@ -61,15 +61,52 @@ def get_user_by_phone(phone_number):
         print(e)
 
 
-async def broadcast_all_users(message):
-    users = await get_all_user()
-    for user in users:
-        try:
-            await message.bot.send_message(user.user_tg_id, message.text.split(" ", 1)[1])
-        except Exception as e:
-            print(f"Не удалось отправить сообщение пользователю {user.phone_number}: {e}")
-            await message.bot.send_message(ADMIN_ID,
-                                           f"Не удалось отправить сообщение пользователю {user.phone_number}: {e}")
+list_message_id = []
+
+
+@broadcast_router.message(MailingState.mailing)
+async def mailing_admin(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    if user_id in admins:
+
+        if message.text == ru['inline_keyboard_button']['back']:
+            await message.bot.send_message(message.from_user.id, "🚫Действие отменено", reply_markup=menu_kb(lang))
+            await state.clear()
+            return
+        all_users = await get_all_user()
+        success = 0
+        unsuccess = 0
+
+        for i in all_users:
+            try:
+                message_id = await message.bot.copy_message(chat_id=i.user_tg_id, from_chat_id=message.from_user.id,
+                                                            message_id=message.message_id,
+                                                            reply_markup=message.reply_markup)
+                success += 1
+                list_message_id.append(message_id)
+            except:
+                unsuccess += 1
+        await message.bot.send_message(message.from_user.id, f"Рассылка завершена!\n"
+                                                             f"Успешно отправлено: {success}\n"
+                                                             f"Неуспешно: {unsuccess}",
+                                       reply_markup=menu_kb(lang))
+        print(list_message_id)
+        await state.clear()
+    else:
+        await message.answer("Недостаточно прав для выполнения этой команды",
+                             reply_markup=menu_kb(lang=await get_lang(user_id)))
+
+
+# async def broadcast_all_users(message):
+#     users = await get_all_user()
+#     for user in users:
+#         try:
+#             await message.bot.send_message(user.user_tg_id, message.text.split(" ", 1)[1])
+#         except Exception as e:
+#             print(f"Не удалось отправить сообщение пользователю {user.phone_number}: {e}")
+#             await message.bot.send_message(ADMIN_ID,
+#                                            f"Не удалось отправить сообщение пользователю {user.phone_number}: {e}")
 
 
 # Функция для отправки сообщения пользователю по номеру телефона
@@ -90,13 +127,15 @@ async def send_message_by_phone(phone_number, message, message_text):
 
 # Пример команды для запуска рассылки всем пользователям
 @broadcast_router.message(Command("broadcast"))
-async def handle_broadcast_command(message: Message):
+async def handle_broadcast_command(message: Message, state: FSMContext):
     user_id = message.from_user.id
     if user_id in admins:
-        await broadcast_all_users(message)
-        await message.reply("Рассылка завершена.")
+        await message.answer("Введите сообщение для рассылки, либо отправьте фотографии/видео с описанием",
+                             reply_markup=product_back_to_category("ru"))
+        await state.set_state(MailingState.mailing)
     else:
-        await menu(lang=await get_lang(user_id), message=message)
+        await message.answer("Недостаточно прав для выполнения этой команды",
+                             reply_markup=menu_kb(lang=await get_lang(user_id)))
 
 
 # Пример команды для отправки сообщения по номеру телефона
@@ -116,7 +155,8 @@ async def handle_send_command(message: Message):
         await send_message_by_phone(phone_number, message, message_text)
         await message.reply("Сообщение отправлено.")
     else:
-        await menu(lang=await get_lang(user_id), message=message)
+        await message.answer("Недостаточно прав для выполнения этой команды",
+                             reply_markup=menu_kb(lang=await get_lang(user_id)))
 
 
 @callback_router2.callback_query(F.data.in_(["cancel", "confirm", "change"]))
@@ -132,46 +172,62 @@ async def root(query: CallbackQuery, state: FSMContext):
         await state.clear()
         await query.message.delete()
         del_cart = await delete_user_cart(user_id)
-        finally_order.pop(user_id)
+        try:
+            finally_order.pop(user_id)
+        except:
+            pass
         user_location.pop(user_id)
         await menu(lang=lang, message=query.message)
+        await state.clear()
     elif query.data == "confirm":
         print(user_location)
         await query.message.delete()
         await user_order_conf_menu(user_id, message=query.message, kb=None, payment_method=pay)
         user_id = query.from_user.id
         print(pay)
+        cart_text = await order_menu(user_id, state)
+        data_for_option1 = {"action": "Reject", "user_id": user_id}
+        data_for_option2 = {"action": "Accept", "user_id": user_id}
         if pay in ["💳Click", "💳Payme"]:
             # Пример заказанных продуктов
-            ordered_products = await get_user_cart(user_id)
 
-            # Создание списка цен (LabeledPrice) на основе заказанных продуктов
-            prices = [LabeledPrice(label=item['product_name'], amount=item['total_price'] * 100) for item in
-                      ordered_products]
-
-            # Отправка счета
-            await query.message.bot.send_invoice(
-                chat_id=user_id,
-                title="Оплата заказа",
-                description="Пожалуйста, оплатите ваш заказ",
-                provider_token=CLICK_TOKEN if pay == "💳Click" else PAYME_TOKEN,
-                # Замените на ваш токен платежного провайдера
-                currency='UZS',
-                prices=prices,
-                start_parameter='order-payment',
-                payload='order-payment-payload'
-            )
+            del_cart = await delete_user_cart(user_id)
+            try:
+                if finally_order[user_id]:
+                    await query.message.bot.send_location(chat_id=ADMIN_ID, latitude=finally_order[user_id]['latitude'],
+                                                          longitude=finally_order[user_id]["longitude"])
+            except:
+                pass
+            try:
+                finally_order.pop(user_id)
+            except:
+                pass
+            user_location.pop(user_id)
+            await state.clear()
+            await query.message.bot.send_message(ADMIN_ID, cart_text,
+                                                 reply_markup=builder_inline_mk(
+                                                     text=['Подтвердить', 'Отклонить'],
+                                                     call_data=[data_for_option2,
+                                                                data_for_option1]))
         else:
-            cart_text = await order_menu(user_id, state)
-            await query.message.bot.send_message(ADMIN_ID, cart_text + "\n\nПодтвержден")
-            if lang == "ru":
-                await query.message.bot.send_message(user_id,
-                                                     "Заказ принят. Вам позвонят для уточнения заказа",
-                                                     reply_markup=menu_kb(lang))
-            else:
-                await query.message.bot.send_message(user_id,
-                                                     "Buyurtma qabul qilindi. Buyurtmani aniqlashtirish uchun sizga qo'ng'iroq qilishadi",
-                                                     reply_markup=menu_kb(lang))
+            try:
+                if finally_order[user_id]:
+                    await query.message.bot.send_location(chat_id=ADMIN_ID, latitude=finally_order[user_id]['latitude'],
+                                                          longitude=finally_order[user_id]["longitude"])
+            except:
+                pass
+            del_cart = await delete_user_cart(user_id)
+            try:
+                finally_order.pop(user_id)
+            except:
+                pass
+            user_location.pop(user_id)
+            await query.message.bot.send_message(ADMIN_ID, cart_text,
+                                                 reply_markup=builder_inline_mk(
+                                                     text=['Подтвердить', 'Отклонить'],
+                                                     call_data=[data_for_option2,
+                                                                data_for_option1]))
+        await query.message.answer("✅ Заказ принят.\nВам позвонят для уточнения заказа!" if lang == "ru" else "✅Buyurtma qabul qilindi.\nBuyurtmani aniqlashtirish uchun sizga qo'ng'iroq qilishadi")
 
         print("good" if info else "bad")
     elif query.data == "change":
@@ -187,88 +243,100 @@ async def order_menu(user_id, state: FSMContext):
     lang = await get_lang(user_id)
     data = await state.get_data()
     info = await get_all_info(user_id)
+    user_cart = await get_user_cart(user_id)
+    cart_text = ""
+    total_price_all = 0
+    for item in user_cart:
+        cart_text += f"{item['product_name']} x {item['quantity']} = {"{:,.0f}".format(item['total_price']).replace(",", " ")} \n"
+        total_price_all += item['total_price']
     pay = f"{"💴 Наличные" if lang == "ru" else "💴 Naqd"}" if data["payment"][user_id] == "cash" else "💳" + \
                                                                                                      data["payment"][
                                                                                                          user_id]
 
-    delivery_or = f"🚙 Доставка \n📍 {user_location[user_id][0]}" if user_location[user_id][0] else "📦 Самовывоз"
-    delivery_or_uz = f"🚙 Yetkazib berish \n📍 {user_location[user_id][0]}" if user_location[
-        user_id][0] else "📦 Olib ketish"
-    cart_text = ""
-    user_cart = await get_user_cart(user_id)
+    delivery_or = f"🚕Доставка\n📍 {user_location[user_id][0]}" if \
+        user_location[user_id][0] != 'biotact' else "🏃Самовывоз"
+
+    delivery_or_uz = f"🚕Yetkazib berish \n📍 {user_location[user_id][0]}" if \
+        user_location[
+            user_id][0] != 'biotact' else "🏃 Olib ketish"
+
     discount = await get_user_promocode_cart(user_id)
-    total_price_all = 0
-    for item in user_cart:
-        cart_text += f"{item['product_name']} x {item['quantity']} = {item['total_price']} \n"
-        total_price_all += item['total_price']
+
     if discount > 0:
-        total_price_all -= total_price_all * (discount / 100)
-        cart_text += f"\n\nИтого: {total_price_all:,} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\nJami: {total_price_all:,} so'm {discount}% skidka bilan"
+        price_w_discount = total_price_all - (total_price_all * (discount / 100))
+        cart_text += f"\n{discount}% промокод." if lang == 'ru' else f"\n{discount}% chegirma."
+        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")}</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')}</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
-{(f"Дoполнительные номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительные номер:Нету" if lang == "ru" else f"Qo'shimcha raqam:Yoq")}:
+{(f"Дoполнительные номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительные номер:НЕТ" if lang == "ru" else f"Qo'shimcha raqam:YOQ")}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
 {"Тип оплаты" if lang == "ru" else "To'lov turi"}: 
-{pay}: {total_price_all:,}
-{(f"Комментарий к заказу: {user_location[user_id][2]}" if lang == "ru" else f"Xabar: {user_location[user_id][2]}") if user_location[user_id][2] else ("Комментарий к заказу: Нету" if lang == "ru" else f"Xabar: Yoq")}
+{pay}: {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум
+{(f"Комментарий к заказу: {user_location[user_id][2]}" if lang == "ru" else f"Xabar: {user_location[user_id][2]}") if user_location[user_id][2] else ("Комментарий к заказу: НЕТ" if lang == "ru" else f"Xabar: YOQ")}
 
         """
         return cart_text
     else:
-        cart_text += f"\n\nИтого: {total_price_all:,} сум" if lang == 'ru' else f"\n\nJami: {total_price_all:,} so'm"
+        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> {"{:,.0f}".format(total_price_all).replace(",", " ")}   сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b>{"{:,.0f}".format(total_price_all).replace(',', ' ')}so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
-{(f"Дoполнительные номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительные номер:Нету" if lang == "ru" else f"Qo'shimcha raqam:Yoq")}:
+{(f"Дoполнительные номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительные номер:НЕТ" if lang == "ru" else f"Qo'shimcha raqam:YOQ")}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
 {"Тип оплаты" if lang == "ru" else "To'lov turi"}:
-{pay}: {total_price_all:,}
-{(f"Комментарий к заказу: {user_location[user_id][2]}" if lang == "ru" else f"Xabar: {user_location[user_id][2]}") if user_location[user_id][2] else ("Комментарий к заказу: Нету" if lang == "ru" else f"Xabar: Yoq")}
+{pay}: {"{:,.0f}".format(total_price_all).replace(",", " ")}
+{(f"Комментарий к заказу: {user_location[user_id][2]}" if lang == "ru" else f"Xabar: {user_location[user_id][2]}") if user_location[user_id][2] else ("Комментарий к заказу: НЕТ" if lang == "ru" else f"Xabar: YOQ")}
                         """
         return cart_text
 
 
 # Оброботчик после(Успешной) оплаты через CLICK
-@main_router.message(lambda message: message.successful_payment)
-async def got_payment(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    lang = await get_lang(user_id)
-    data = await state.get_data()
-    info = await get_all_info(user_id)
-    pay = f"{"💴 Наличные" if lang == "ru" else "💴 Naqd"}" if data["payment"][user_id] == "cash" else "💳" + \
-                                                                                                     data["payment"][
-                                                                                                         user_id]
+# @main_router.message(lambda message: message.successful_payment)
+# async def got_payment(message: Message, state: FSMContext):
+#     user_id = message.from_user.id
+#     lang = await get_lang(user_id)
+#     data = await state.get_data()
+#     info = await get_all_info(user_id)
+#     pay = f"{"💴 Наличные" if lang == "ru" else "💴 Naqd"}" if data["payment"][user_id] == "cash" else "💳" + \
+#                                                                                                      data["payment"][
+#                                                                                                          user_id]
+#
+#     if lang == "uz":
+#         response_text = f"Тошган тушунча раҳмат! {message.successful_payment.total_amount / 100} {message.successful_payment.currency} нархидаги заявкани тез ёпамиз! Алоқада туринг!"
+#     elif lang == "ru":
+#         response_text = f"Ура! Спасибо за оплату! Мы обработаем ваш заказ на {message.successful_payment.total_amount / 100} {message.successful_payment.currency} как можно быстрее! Оставайтесь на связи!"
+#
+#     # Отправка сообщения пользователю
+#     await message.bot.send_message(user_id, response_text)
+#
+#     # admin_id = -4276762392
+#     # admin_id = 889121031
+#
+#     # очистить корзину пользователя
+#     cart_text = await order_menu(user_id, state)
+#     # отправим админу сообщение о новом заказе
+#     try:
+#         if finally_order[user_id]:
+#             await message.bot.send_location(chat_id=ADMIN_ID, latitude=finally_order[user_id]['latitude'],
+#                                             longitude=finally_order[user_id]["longitude"])
+#     except:
+#         pass
+#
+#     data_for_option1 = {"action": "Reject", "user_id": user_id}
+#     data_for_option2 = {"action": "Accept", "user_id": user_id}
+#     del_cart = await delete_user_cart(user_id)
+#     finally_order.pop(user_id)
+#     user_location.pop(user_id)
+#     await state.clear()
+#     await message.bot.send_message(ADMIN_ID, cart_text,
+#                                    reply_markup=builder_inline_mk(text=['Подтвердить', 'Отклонить'],
+#                                                                   call_data=[data_for_option2,
+#                                                                              data_for_option1]))
 
-    if lang == "uz":
-        response_text = f"Тошган тушунча раҳмат! {message.successful_payment.total_amount / 100} {message.successful_payment.currency} нархидаги заявкани тез ёпамиз! Алоқада туринг!"
-    elif lang == "ru":
-        response_text = f"Ура! Спасибо за оплату! Мы обработаем ваш заказ на {message.successful_payment.total_amount / 100} {message.successful_payment.currency} как можно быстрее! Оставайтесь на связи!"
 
-    # Отправка сообщения пользователю
-    await message.bot.send_message(user_id, response_text)
-
-    # admin_id = -4276762392
-    # admin_id = 889121031
-
-    # очистить корзину пользователя
-    cart_text = await order_menu(user_id, state)
-    # отправим админу сообщение о новом заказе
-    try:
-        if finally_order[user_id]:
-            await message.bot.send_location(chat_id=ADMIN_ID, latitude=finally_order[user_id]['latitude'],
-                                            longitude=finally_order[user_id]["longitude"])
-    except:
-        pass
-
-    data_for_option1 = {"action": "Reject", "user_id": user_id}
-    data_for_option2 = {"action": "Accept", "user_id": user_id}
-    del_cart = await delete_user_cart(user_id)
-    finally_order.pop(user_id)
-    user_location.pop(user_id)
-    await state.clear()
-    await message.bot.send_message(ADMIN_ID, cart_text,
-                                   reply_markup=builder_inline_mk(text=['Подтвердить', 'Отклонить'],
-                                                                  call_data=[data_for_option2,
-                                                                             data_for_option1]))
+@sync_to_async
+def create_user_order(user_id, order_text):
+    MyOrders.objects.create(user_id=user_id, order_text=order_text)
+    return True
 
 
 @main_router.callback_query(OrderCallback.filter())
@@ -277,21 +345,26 @@ async def root(query: CallbackQuery, callback_data: OrderCallback):
     if callback_data.action == "Accept":
         if lang == "ru":
             await query.message.bot.send_message(callback_data.user_id,
-                                                 "Заказ принят. Вам позвонят для уточнения заказа",
+                                                 "😊Ваш заказ оформлен и скоро будет у вас!",
                                                  reply_markup=menu_kb(lang))
         else:
             await query.message.bot.send_message(callback_data.user_id,
-                                                 "Buyurtma qabul qilindi. Buyurtmani aniqlashtirish uchun sizga qo'ng'iroq qilishadi",
+                                                 "😊Sizning buyurtmangiz bajarildi va tez orada sizda bo'ladi!",
                                                  reply_markup=menu_kb(lang))
+        admin_response_text = query.message.text + "\n\n✅ Заказ принят"
+        result = await create_user_order(callback_data.user_id, query.message.text)
     elif callback_data.action == "Reject":
         if lang == "ru":
             await query.message.bot.send_message(callback_data.user_id,
-                                                 "Заказ отклонен. Вам позвонят для уточнения заказа",
+                                                 "😔 К сожалению вы отклонили заказ",
                                                  reply_markup=menu_kb(lang))
         else:
             await query.message.bot.send_message(callback_data.user_id,
                                                  "Buyurtma qabul qilinmadi. Buyurtmani aniqlashtirish uchun sizga qo'ng'iroq qilishadi",
                                                  reply_markup=menu_kb(lang))
+        admin_response_text = query.message.text + "\n\n❌ Заказ отклонен"
+
+    await query.message.edit_text(admin_response_text, reply_markup=None)
 
 
 # @main_router.message(ContentType.SUCCESSFUL_PAYMENT)
@@ -326,7 +399,7 @@ async def menu(lang, message=None, query=None):
     if lang == 'ru':
         try:
             if message:
-                await message.answer("Главное меню", reply_markup=menu_kb(lang))
+                await message.answer("Для заказа нажмите 🛍️Заказать", reply_markup=menu_kb(lang))
                 await message.answer(ru['message_hello'], parse_mode='HTML',
                                      reply_markup=menu_inline_kb(lang))
             elif query:
@@ -334,7 +407,7 @@ async def menu(lang, message=None, query=None):
                 await query.message.delete()
                 # await query.message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'],
                 #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
-                await query.message.answer("Главное меню", reply_markup=menu_kb(lang))
+                await query.message.answer("Для заказа нажмите 🛍️Заказать", reply_markup=menu_kb(lang))
                 await query.message.answer(ru['message_hello'], parse_mode='HTML',
                                            reply_markup=menu_inline_kb(lang))
         except Exception as e:
@@ -343,14 +416,14 @@ async def menu(lang, message=None, query=None):
 
                 # await message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'], parse_mode='HTML',
                 #                            reply_markup=menu_kb(lang))
-                await message.answer("Главное меню", reply_markup=menu_kb(lang))
+                await message.answer("Для заказа нажмите 🛍️Заказать", reply_markup=menu_kb(lang))
                 await message.answer(ru['message_hello'], parse_mode='HTML',
                                      reply_markup=menu_inline_kb(lang))
             elif query:
                 await query.message.delete()
                 # await query.message.answer_photo(photo=FSInputFile(script_path), caption=ru['message_hello'],
                 #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
-                await query.message.answer("Главное меню", reply_markup=menu_kb(lang))
+                await query.message.answer("Для заказа нажмите 🛍️Заказать", reply_markup=menu_kb(lang))
                 await query.message.answer(ru['message_hello'], parse_mode='HTML',
                                            reply_markup=menu_inline_kb(lang))
 
@@ -360,7 +433,7 @@ async def menu(lang, message=None, query=None):
             if message:
                 # await message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'], parse_mode='HTML',
                 #                            reply_markup=menu_kb(lang))
-                await message.answer("Bosh menyu", reply_markup=menu_kb(lang))
+                await message.answer("Buyurtma berish uchun 🛍️buyurtma tugmasini bosing", reply_markup=menu_kb(lang))
                 await message.answer(uz['message_hello'], parse_mode='HTML',
                                      reply_markup=menu_inline_kb(lang))
 
@@ -368,14 +441,15 @@ async def menu(lang, message=None, query=None):
                 await query.message.delete()
                 # await query.message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'],
                 #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
-                await query.message.answer("Bosh menyu", reply_markup=menu_kb(lang))
+                await query.message.answer("Buyurtma berish uchun 🛍️buyurtma tugmasini bosing",
+                                           reply_markup=menu_kb(lang))
                 await query.message.answer(uz['message_hello'], parse_mode='HTML',
                                            reply_markup=menu_inline_kb(lang))
         except Exception as e:
             if message:
                 # await message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'], parse_mode='HTML',
                 #                            reply_markup=menu_kb(lang))
-                await message.answer("Bosh menyu", reply_markup=menu_kb(lang))
+                await message.answer("Buyurtma berish uchun 🛍️buyurtma tugmasini bosing", reply_markup=menu_kb(lang))
                 await message.answer(uz['message_hello'], parse_mode='HTML',
                                      reply_markup=menu_inline_kb(lang))
 
@@ -383,7 +457,8 @@ async def menu(lang, message=None, query=None):
                 await query.message.delete()
                 # await query.message.answer_photo(photo=FSInputFile(script_path), caption=uz['message_hello'],
                 #                                  parse_mode='HTML', reply_markup=menu_kb(lang))
-                await query.message.answer("Bosh menyu", reply_markup=menu_kb(lang))
+                await query.message.answer("Buyurtma berish uchun 🛍️buyurtma tugmasini bosing",
+                                           reply_markup=menu_kb(lang))
                 await query.message.answer(uz['message_hello'], parse_mode='HTML',
                                            reply_markup=menu_inline_kb(lang))
 
@@ -436,8 +511,16 @@ def update_birthday(user_id, birthday):
         raise e
 
 
+@main_router.message(Command("delete"))
+async def root(message: Message):
+    all_user = await get_all_user()
+    for i, j in zip(all_user, list_message_id):
+        await message.bot.delete_message(i.user_tg_id, j.message_id)
+
+
 @main_router.message(CommandStart())
 async def start(message: Message):
+    print(list_message_id)
     try:
         checker = await get_user(message.from_user.id)
         if checker:
@@ -453,7 +536,9 @@ async def start(message: Message):
         #                            caption=ru['message_hello'] + "\n" + uz['message_hello'], parse_mode='HTML')
         await message.answer(ru['message_hello'] + "\n" + uz['message_hello'], parse_mode='HTML')
 
-        await message.answer("Выберите язык/Tilni tanlang", reply_markup=choose_lang())
+        await message.answer("""Здравствуйте! Добро пожаловать в наш бот!
+Давайте для начала выберем язык
+обслуживания!""", reply_markup=choose_lang())
         raise e
 
 
@@ -565,19 +650,20 @@ async def user_cart_menu(lang: str, message=None, query=None):
             discount = await get_user_promocode_cart(message.from_user.id)
             print(discount)
             total_price_all = 0
-            cart_text = "<b>Корзина:\n\n</b>" if lang == 'ru' else "<b>Savatdagi mahsulotlaringiz:</b>\n\n"
+            cart_text = ""
             for item in user_cart:
-                cart_text += f"<b>{item['product_name']} </b>- {item['quantity']} шт. - {item['total_price']} сум\n"
+                cart_text += f"<b>{item['product_name']} </b>- {item['quantity']} шт. - {"{:,.0f}".format(item['total_price']).replace(",", " ")} сум\n"
                 total_price_all += item['total_price']
 
             if discount > 0:
-                total_price_all -= total_price_all * (discount / 100)
+                price_w_discount = total_price_all - (total_price_all * (discount / 100))
+                cart_text += f"\n{discount}% промокод." if lang == 'ru' else f"\n{discount}% chegirma."
                 await message.answer(
-                    cart_text + f"\n\n<b>Итого: </b> {total_price_all:,} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\n<b>Jami: </b> {total_price_all:,} so'm {discount}% skidka bilan",
+                    cart_text + f"\n\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")}</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум" if lang == 'ru' else f"\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')}</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm",
                     reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart), parse_mode="HTML")
             else:
                 await message.answer(
-                    cart_text + f"\n\n<b>Итого:</b> {total_price_all:,} сум" if lang == 'ru' else f"\n\n<b>Jami:</b> {total_price_all:,} so'm",
+                    cart_text + f"\n\n<b>Итого:</b> {"{:,.0f}".format(total_price_all).replace(",", " ")} сум" if lang == 'ru' else f"\n\n<b>Jami:</b> {"{:,.0f}".format(total_price_all).replace(",", " ")} so'm",
                     reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart), parse_mode="HTML")
 
         else:
@@ -593,16 +679,16 @@ async def user_cart_menu(lang: str, message=None, query=None):
             total_price_all = 0
             cart_text = "<b>Корзина:\n\n</b>" if lang == 'ru' else "<b>Savatdagi mahsulotlaringiz:</b>\n\n"
             for item in user_cart:
-                cart_text += f"- {item['quantity']} шт. - {item['total_price']} сум\n"
+                cart_text += f"- {item['quantity']} шт. - {"{:,.0f}".format(item['total_price']).replace(",", " ")} сум\n"
                 total_price_all += item['total_price']
             if discount > 0:
                 total_price_all -= total_price_all * (discount / 100)
                 await query.message.edit_text(
-                    cart_text + f"\n\n{total_price_all:,} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\n{total_price_all:,} so'm {discount}% skidka bilan",
+                    cart_text + f"\n\n{"{:,.0f}".format(total_price_all).replace(",", " ")} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\n{"{:,.0f}".format(total_price_all).replace(",", " ")} so'm {discount}% skidka bilan",
                     reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart), parse_mode="HTML")
             else:
                 await query.message.edit_text(
-                    cart_text + f"\n\n {total_price_all:,} сум" if lang == 'ru' else f"\n\n {total_price_all:,} so'm",
+                    cart_text + f"\n\n {"{:,.0f}".format(total_price_all).replace(",", " ")} сум" if lang == 'ru' else f"\n\n {"{:,.0f}".format(total_price_all).replace(",", " ")} so'm",
                     reply_markup=user_cart_edit(lang, True if discount > 0 else False, user_cart), parse_mode="HTML")
         else:
             cart_text = "Ваша корзина пуста" if lang == 'ru' else "Sizning savatingiz bo'sh"
@@ -617,7 +703,7 @@ async def cart(message: Message, state: FSMContext):
     try:
         if user_location[message.from_user.id]:
             await state.set_state(StageOfOrderState.choose_product)
-            await message.answer("Ваша корзина" if lang == 'ru' else "Sizning savatingiz",
+            await message.answer("Корзина:" if lang == 'ru' else "Svatingiz:",
                                  reply_markup=product_back_to_category(lang))
             await user_cart_menu(message=message, lang=lang)
 
@@ -646,13 +732,22 @@ async def choose_product(message: Message, state: FSMContext):
     all_pr = await get_all_product()
     print(lang)
     if lang == 'ru':
-        await message.answer("Заберите свой заказ самостоятельно 🙋 или выберите доставку 🚙",
+        await message.answer("Выберите тип доставки",
                              reply_markup=stage_order_delivery_kb(lang))
         await state.set_state(StageOfOrderState.get_delivery)
     else:
-        await message.answer("Buyurtmangizni mustaqil olib keting 🙋‍ yoki yetkazish xizmatini tanlang 🚙",
+        await message.answer("Yetkazib berish turini tanlang",
                              reply_markup=stage_order_delivery_kb(lang))
         await state.set_state(StageOfOrderState.get_delivery)
+
+
+@sync_to_async
+def get_adress(user_id):
+    try:
+        adress = list(UserAddress.objects.filter(user_id=user_id).all())
+        return adress
+    except:
+        return None
 
 
 @main_router.message(StageOfOrderState.get_delivery)
@@ -660,42 +755,85 @@ async def get_delivery(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
     all_pr = await get_all_product()
+    my_adress = await get_adress(user_id)
+    print(my_adress)
     if message.text == ru['inline_keyboard_button']['delivery'] or message.text == uz['inline_keyboard_button'][
         'delivery']:
         await message.answer("Пожалуйста, скиньте свой адрес" if lang == 'ru' else "Iltimos, manzilni yuboring",
-                             reply_markup=send_location_kb(lang))
+                             reply_markup=send_location_kb(lang, my_adress))
         await state.set_state(StageOfOrderState.get_location)
     elif message.text == uz['inline_keyboard_button']['pickup'] or message.text == ru['inline_keyboard_button'][
         'pickup']:
         user_location[user_id] = ["biotact"]
+        await message.answer(
+            f"Нажмите на {"📍Отправить локацию магазина"}" if lang == 'ru' else "📍Do'kon manzilini yuborish tugmasini bosing",
+            reply_markup=location_kb(lang))
         # await message.answer("""Закажите через новое удобное меню 👇😉""", reply_markup=wb_button())
-        await message.answer(ru['choose_product_menu_1'] if lang == 'ru' else uz['choose_product_menu_1'],
-                             parse_mode="HTML",
-                             reply_markup=category_product_menu(lang))
-        await state.set_state(StageOfOrderState.start_order)
+
+        await state.set_state(StageOfOrderState.location_address)
     elif message.text == uz['inline_keyboard_button']['back'] or message.text == ru['inline_keyboard_button']['back']:
         await menu(lang=lang, message=message)
         await state.clear()
+
+
+@main_router.message(StageOfOrderState.location_address)
+async def root(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    if message.text in [ru['inline_keyboard_button']['back'], uz['inline_keyboard_button']['back']]:
+        user_location.pop(user_id)
+        await menu(lang=await get_lang(message.from_user.id), message=message)
+        await state.clear()
+    elif message.text in ["📍Отправить локацию магазина", "📍Magazin locatsiyasini yuborish"]:
+        await message.answer_location(latitude=41.311668, longitude=69.240440)
+        await message.answer(ru['address'] if lang == 'ru' else uz['address'])
+        await message.answer(ru['choose_product_menu_2'] if lang == 'ru' else uz['choose_product_menu_2'],
+                             parse_mode="HTML",
+                             reply_markup=category_product_menu(lang))
+        await state.set_state(StageOfOrderState.start_order)
+
+
+@sync_to_async
+def add_adress(user_id, address):
+    UserAddress.objects.create(user_id=user_id, address=address)
+    return True
 
 
 @main_router.message(StageOfOrderState.get_location)
 async def get_location(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
+    my_address = await get_adress(user_id)
     if message.location:
         longitude = message.location.longitude
         latitude = message.location.latitude
         finally_order[user_id] = {"longitude": longitude, "latitude": latitude}
         location = geolocators(latitude, longitude)
-        await message.answer(f"Ваш адрес: {location}", reply_markup=confirm_location_kb(lang))
+        await message.answer(
+            f"Ваш адрес: {location}" + """\nПодтвердите адрес?""" if lang == "ru" else f"Sizning manzilingiz: {location}" + """
+Tasdiqlash?""", reply_markup=confirm_location_kb(lang))
         user_location[user_id] = [location]
-    if message.text == 'Подтвердить' or message.text == 'Tasdiqlash':
+    if message.text == '✅Подтвердить' or message.text == '✅Tasdiqlash':
         all_pr = await get_all_product()
 
         await message.answer(
             "Укажите удобное для вас время 🕒" if lang == "ru" else "Buyurtmani qabul qilish uchun qulay vaqtni tanlang 🕒",
             reply_markup=choose_time_kb(lang))
         await state.set_state(StageOfOrderState.get_time)
+    if message.text in [ru['inline_keyboard_button']['send_location1'], uz['inline_keyboard_button']['send_location1']]:
+        longitude = finally_order[user_id]['longitude']
+        latitude = finally_order[user_id]['latitude']
+        location = geolocators(latitude, longitude)
+        result = await add_adress(user_id, location)
+        await message.answer("✅Адрес добавлен" if lang == "ru" else "✅Manzil qo'shildi")
+
+    if message.text in [i.address for i in my_address]:
+        await message.answer(
+            "Укажите удобное для вас время 🕒" if lang == "ru" else "Buyurtmani qabul qilish uchun qulay vaqtni tanlang 🕒",
+            reply_markup=choose_time_kb(lang))
+        user_location[user_id] = [message.text]
+        await state.set_state(StageOfOrderState.get_time)
+
     if message.text == uz['inline_keyboard_button']['back'] or message.text == ru['inline_keyboard_button']['back']:
         await state.clear()
         await menu(lang=lang, message=message)
@@ -705,9 +843,11 @@ async def get_location(message: Message, state: FSMContext):
 async def get_time(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
+    my_address = await get_adress(user_id)
+    print(my_address)
     if message.text == uz['inline_keyboard_button']['back'] or message.text == ru['inline_keyboard_button']['back']:
         await message.answer("Пожалуйста, скиньте свой адрес" if lang == 'ru' else "Iltimos, manzilni yuboring",
-                             reply_markup=send_location_kb(lang))
+                             reply_markup=send_location_kb(lang, my_address))
         await state.set_state(StageOfOrderState.get_location)
     elif message.text in ["Ближайшее время", "Tez orada"]:
         await message.answer(ru['choose_product_menu_1'] if lang == 'ru' else uz['choose_product_menu_1'],
@@ -715,7 +855,7 @@ async def get_time(message: Message, state: FSMContext):
                              reply_markup=category_product_menu(lang))
         await state.set_state(StageOfOrderState.start_order)
     elif message.text in ["На время", "Bir muddat"]:
-        await message.answer("Выберите время" if lang == "ru" else "Vaqtni tanlang",
+        await message.answer("Укажите удобное для вас время 🕒" if lang == "ru" else "Buyurtmani qabul qilish uchun qulay vaqtni tanlang 🕒",
                              reply_markup=generate_time_buttons(lang))
         await state.set_state(TimeState.choose_time)
 
@@ -750,20 +890,11 @@ async def choose_time_func(message: Message, state: FSMContext):
 #     await menu(lang=lang, message=message)
 
 
-@main_router.message(F.text.in_(["Начать заказ заново", "Buyurtma qayta boshlash"]))
-async def back_to_menu(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    lang = await get_lang(user_id)
-    print(lang, user_id)
-    user_location.pop(user_id)
-    await menu(lang=lang, message=message)
-
-
 @sync_to_async
 def get_user_promocode(user_id=None, lang=None, promocode=None):
     # Проверка, что промокод существует
     if not Promocode.objects.filter(promocode_code=promocode).exists():
-        return "Такого промокода нету" if lang == 'ru' else 'Bu promokod mavjud emas'
+        return "❌Данного промокода нету" if lang == 'ru' else '❌Bu promokod mavjud emas'
 
     # Проверка, что промокод уже был использован данным пользователем
     if UsedPromocode.objects.filter(Q(promocode=promocode) & Q(user_id=user_id)).exists():
@@ -829,37 +960,42 @@ async def user_order_conf_menu(user_id, query=None, message=None, kb=choose_paym
     lang = await get_lang(user_id)
     info = await get_all_info(user_id)
     print(user_location)
-    delivery_or = "📦 Самовывоз" if user_location[user_id][
-                                       0] == "biotact" else f"🚙 Доставка \n📍 {user_location[user_id][0]}"
-    delivery_or_uz = "📦 Olib ketish" if user_location[user_id][
-                                            0] == "biotact" else f"🚙 Yetkazib berish \n📍 {user_location[user_id][0]}"
     cart_text = ""
     user_cart = await get_user_cart(user_id)
     discount = await get_user_promocode_cart(user_id)
     total_price_all = 0
     for item in user_cart:
-        cart_text += f"{item['product_name']} x {item['quantity']} = {item['total_price']} \n"
+        cart_text += f"{item['product_name']} x {item['quantity']} = {"{:,.0f}".format(item['total_price']).replace(",", " ")} \n"
         total_price_all += item['total_price']
+
+    delivery_or = f"🚕Доставка\n📍 {user_location[user_id][0]}" if \
+        user_location[user_id][0] != 'biotact' else "🏃Самовывоз"
+
+    delivery_or_uz = f"🚕Yetkazib berish \n📍 {user_location[user_id][0]}" if \
+        user_location[
+            user_id][0] != 'biotact' else "🏃 Olib ketish"
+
     if discount > 0:
-        total_price_all -= total_price_all * (discount / 100)
-        cart_text += f"\n\nИтого: {total_price_all:,} сум c учетом скидки {discount}%" if lang == 'ru' else f"\n\nJami: {total_price_all:,} so'm {discount}% skidka bilan"
+        price_w_discount = total_price_all - (total_price_all * (discount / 100))
+        cart_text += f"\n{discount}% промокод." if lang == 'ru' else f"\n{discount}% chegirma."
+        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")}</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')}сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')}</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
 {"Тип оплаты" if lang == "ru" else "To'lov turi"}: 
-{payment_method}:{total_price_all}
+{payment_method}: {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум
 """
         if message:
             await message.answer(cart_text, reply_markup=kb(lang) if kb else None)
         elif query:
             await query.message.edit_text(cart_text, reply_markup=kb(lang) if kb else None)
     else:
-        cart_text += f"\n\nИтого: {total_price_all:,} сум" if lang == 'ru' else f"\n\nJami: {total_price_all:,} so'm"
+        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> {"{:,.0f}".format(total_price_all).replace(",", " ")}сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b>{"{:,.0f}".format(total_price_all).replace(',', ' ')}so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
 {"Тип оплаты" if lang == "ru" else "To'lov turi"}:
-{payment_method}:{total_price_all:,}
+{payment_method}: {"{:,.0f}".format(total_price_all).replace(",", " ")}
             """
         if message:
             await message.answer(cart_text, reply_markup=kb(lang) if kb else None)
@@ -903,16 +1039,13 @@ def get_all_product_by(category):
     return False
 
 
-all_product_dict = {}
-
-
 @main_router.message(StageOfOrderState.start_order)
 # @main_router.message(F.text.in_(["Продукты", "Mahsulotlar", "Сеты", "Setlar", "Мерч", "Merch"]))
 async def gain(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
     all_product = await get_all_product_by(message.text)
-    all_product_dict[user_id] = all_product
+    # all_product_dict[user_id] = all_product
     if message.text in ["Продукция", "Mahsulotlar", "Эксклюзивные сеты", "Ekskluziv Setlar", "Мерч", "Merch"]:
         await state.set_state(StageOfOrderState.choose_product)
         await message.answer("Выберите продукт" if lang == "ru" else "Productni tanlang",
@@ -920,11 +1053,11 @@ async def gain(message: Message, state: FSMContext):
     elif message.text in [ru['inline_keyboard_button']['back'], uz['inline_keyboard_button']['back']]:
         await state.set_state(StageOfOrderState.get_delivery)
         if lang == 'ru':
-            await message.answer("Заберите свой заказ самостоятельно 🙋 или выберите доставку 🚙",
+            await message.answer("Выберите тип доставки",
                                  reply_markup=stage_order_delivery_kb(lang))
             await state.set_state(StageOfOrderState.get_delivery)
         else:
-            await message.answer("Buyurtmangizni mustaqil olib keting 🙋‍ yoki yetkazish xizmatini tanlang 🚙",
+            await message.answer("Yetkazib berish turini tanlang",
                                  reply_markup=stage_order_delivery_kb(lang))
 
 
@@ -949,18 +1082,20 @@ async def product_menu(message, product_id):
     user_id = message.from_user.id
     product = await get_product(product_id)
     lang = await get_lang(user_id)
+    price = float(product.price)
+    formatted_price = "{:,.0f} сум".format(price).replace(",", " ")
     if lang == "ru":
         image = get_image("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url)
         await message.answer_photo(
             photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
-                    f"{product.price:,} сум\n\n{product.description_ru}",
+                    f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
     else:
         await message.answer_photo(
             photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
-                    f"{product.price:,} so'm\n\n{product.description_uz}",
+                    f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
 
 
@@ -975,7 +1110,8 @@ async def product_dec_menu(message: Message, state: FSMContext):
                              parse_mode="HTML",
                              reply_markup=category_product_menu(lang))
 
-    all_product = all_product_dict[user_id]
+    all_product = await get_all_product()
+    print(all_product)
     product_list = [product.product_name for product in all_product]
     if message.text in product_list:
         product_id = all_product[product_list.index(message.text)].id
@@ -983,7 +1119,8 @@ async def product_dec_menu(message: Message, state: FSMContext):
         await state.set_state(StageOfOrderState.get_product)
         print(all_product[product_list.index(message.text)].id)
         print(message.text)
-        await message.answer("Выберите действие", reply_markup=product_edit_menu(lang))
+        await message.answer("Выберите количество продукции" if lang == "ru" else "Mahsulot miqdorini tanlang",
+                             reply_markup=product_edit_menu(lang))
         await product_menu(message, product_id)
 
 
@@ -991,7 +1128,7 @@ async def product_dec_menu(message: Message, state: FSMContext):
 async def gain(message: Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await get_lang(user_id)
-    all_product = all_product_dict[user_id]
+    all_product = await get_all_product()
     product_list = [product.product_name for product in all_product]
     if message.text in [ru['inline_keyboard_button']['back'], uz['inline_keyboard_button']['back']]:
         await state.set_state(StageOfOrderState.choose_product)
@@ -1007,6 +1144,7 @@ async def gain(message: Message, state: FSMContext):
 @main_router.message(
     F.text.in_([ru['inline_keyboard_button']['leave_feedback'], uz['inline_keyboard_button']['leave_feedback']]))
 async def about_us(message: Message, state: FSMContext):
+    await state.clear()
     user_id = message.from_user.id
     lang = await get_lang(user_id)
     await state.set_state(LeaveFeedback.get_feedback)
@@ -1022,6 +1160,7 @@ async def about_us(message: Message, state: FSMContext):
     user_info = await get_user_info(user_id)
     if message.text in [ru['inline_keyboard_button']['back'], uz['inline_keyboard_button']['back']]:
         await menu(lang=lang, message=message)
+        await state.clear()
     else:
         await message.bot.send_message(ADMIN_ID, user_info.phone_number + "\n" + message.text)
         await message.answer("Спасибо за ваш отзыв", reply_markup=menu_kb(lang))
@@ -1133,10 +1272,6 @@ async def root(message: Message, state: FSMContext):
         await settings_menu(message, state)
 
 
-class UserAdress:
-    pass
-
-
 @main_router.message(SettingsState.get_birthday)
 async def root(message: Message, state: FSMContext):
     user_id = message.from_user.id
@@ -1175,3 +1310,11 @@ async def root(message: Message, state: FSMContext):
         result = await update_phone(user_id, phone)
         await message.answer("Ваш номер телефона: " + phone if lang == 'ru' else "Sizning telefon raqamingiz: " + phone)
         await settings_menu(message, state)
+
+
+@main_router.message(
+    F.text.in_([ru['inline_keyboard_button']['about_delivery'], uz['inline_keyboard_button']['about_delivery']]))
+async def back(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    lang = await get_lang(user_id)
+    await message.answer(ru['delivery_menu'] if lang == "ru" else uz['delivery_menu'])

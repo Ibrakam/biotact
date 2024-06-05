@@ -80,7 +80,7 @@ class UserCart(models.Model):
 
 class MyOrders(models.Model):
     user_id = models.BigIntegerField(blank=True, null=True)
-    order_text = models.CharField(max_length=255, blank=True, null=True)
+    order_text = models.CharField(max_length=1000, blank=True, null=True)
 
     def __str__(self):
         return str(self.order_text) if self.order_text else "No Product"
@@ -92,7 +92,7 @@ class MyOrders(models.Model):
 
 class UserAddress(models.Model):
     user_id = models.BigIntegerField(blank=True, null=True)
-    address = models.CharField(max_length=255, blank=True, null=True)
+    address = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return str(self.address) if self.address else "No Product"

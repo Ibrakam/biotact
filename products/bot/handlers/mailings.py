@@ -5,6 +5,3 @@ from asgiref.sync import sync_to_async
 
 from products.models import UserTG
 
-
-def broadcast_router():
-    return None

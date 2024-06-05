@@ -59,21 +59,21 @@ async def product_menu(query, product_id):
     user_id = query.from_user.id
     product = await get_product(product_id)
     lang = await get_lang(user_id)
+    price = float(product.price)
+    formatted_price = "{:,.0f} сум".format(price).replace(",", " ")
     if lang == "ru":
-        await query.message.delete()
         image = get_image("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url)
         await query.message.answer_photo(
             photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
-                    f"{product.price} сум\n\n{product.description_ru}"
-                    "\n\n",
+                    f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
     else:
-        await query.message.delete()
-        await query.message.answer_photo(photo=product.product_image.url,
-                                         caption=f"<b>{product.product_name}</b>\n\n"
-                                                 f"{product.price} so'm\n\n{product.description_uz}",
-                                         parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
+        await query.message.answer_photo(
+            photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
+            caption=f"<b>{product.product_name}</b>\n\n"
+                    f"{formatted_price}\n\n{product.description_ru}",
+            parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
 
 
 @callback_router.callback_query(F.data.in_(['ru', 'uz']))
@@ -145,7 +145,7 @@ async def get_user_product_count(query: CallbackQuery, state: FSMContext):
         user_product = users[user_id]['product_id']
         user_id = query.from_user.id
         result = await add_to_cart(user_id=user_id, product_id=user_product, quantity=product_count, promocode=None)
-        await query.message.bot.answer_callback_query(query.id, text='Товар добавлен в корзину', show_alert=True)
+        await query.message.bot.answer_callback_query(query.id, text='✅Добавлено в корзину' if lang == "ru" else "✅Savatga qo'shildi")
         await state.clear()
         await state.set_state(StageOfOrderState.choose_product)
         await query.message.delete()
@@ -174,9 +174,9 @@ async def product_menu_call(query: CallbackQuery, state: FSMContext):
     lang = await get_lang(query.from_user.id)
     if result:
         await user_cart_menu(lang=lang, query=query)
-        await query.message.bot.answer_callback_query(query.id, text='Товар удален из корзины', show_alert=True)
+        await query.message.bot.answer_callback_query(query.id, text='Товар удален из корзины',)
     else:
-        await query.message.bot.answer_callback_query(query.id, text='Товар уже удален из корзины', show_alert=True)
+        await query.message.bot.answer_callback_query(query.id, text='Товар уже удален из корзины')
 
 
 @callback_router.callback_query(F.data == "about_us")
@@ -227,7 +227,7 @@ async def root(query: CallbackQuery, state: FSMContext):
     lang = await get_lang(user_id)
     await state.set_data({"payment": {user_id: query.data}})
     await query.message.delete()
-    await query.message.answer("Добавьте комментарий" if lang == "ru" else "Izoh qoldiring", reply_markup=pass_kb(lang))
+    await query.message.answer("Оставьте комментарий к заказу." if lang == "ru" else "Izoh qoldiring", reply_markup=pass_kb(lang))
 
 
 

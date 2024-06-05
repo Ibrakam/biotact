@@ -3,6 +3,7 @@ from datetime import datetime
 import pytz
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import Location
 
 from products.bot.handlers.some_func import json_loader
 
@@ -13,7 +14,7 @@ uz = json_loader()['menu']['uz']['inline_keyboard_button']
 def get_phone_num(lang='ru'):
     buttons = [
         [
-            KeyboardButton(text="Отправить свой номер телефона📞" if lang == "ru" else "Telefon raqamini yuborish📞",
+            KeyboardButton(text="☎️ОТПРАВИТЬ КОНТАКТ" if lang == "ru" else "☎️TELEFON RAQAMINI YUBORISH",
                            request_contact=True)
         ]
     ]
@@ -36,6 +37,7 @@ def menu_kb(lang: str = 'ru'):
             KeyboardButton(text=ru['settings'] if lang == 'ru' else uz['settings'])
         ],
         [
+            KeyboardButton(text=ru['about_delivery'] if lang == 'ru' else uz['about_delivery']),
             KeyboardButton(text=ru['about_us'] if lang == 'ru' else uz['about_us']),
         ]
 
@@ -59,15 +61,23 @@ def stage_order_delivery_kb(lang: str):
     return kb
 
 
-def send_location_kb(lang: str):
+def send_location_kb(lang: str, my_adress: list):
     buttons = [
         [
             KeyboardButton(text=ru['send_location'] if lang == 'ru' else uz['send_location'], request_location=True)
         ],
+
         [
             KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
         ]
     ]
+    print(my_adress)
+    try:
+        for i in my_adress:
+            button = KeyboardButton(text=i.address)
+            buttons.insert(1, [button])
+    except:
+        pass
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
 
     return kb
@@ -76,10 +86,24 @@ def send_location_kb(lang: str):
 def confirm_location_kb(lang: str):
     buttons = [
         [
-            KeyboardButton(text="Подтвердить" if lang == "ru" else "Tasdiqlash"),
+            KeyboardButton(text="Переотправить локацию" if lang == 'ru' else "Lokatsiya qayta yuborish", request_location=True),
+            KeyboardButton(text="✅Подтвердить" if lang == "ru" else "✅Tasdiqlash")
         ],
         [
-            KeyboardButton(text=ru['send_location'] if lang == 'ru' else uz['send_location'], request_location=True)
+            KeyboardButton(text=ru['send_location1'] if lang == 'ru' else uz['send_location1']),
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
+        ]
+    ]
+    kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
+
+    return kb
+
+
+def location_kb(lang: str):
+    buttons = [
+        [
+            KeyboardButton(text="📍Отправить локацию магазина" if lang == 'ru' else "📍Magazin locatsiyasini yuborish"),
+            KeyboardButton(text=ru['back'] if lang == 'ru' else uz['back'])
         ]
     ]
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
@@ -143,9 +167,9 @@ def category_product_menu(lang: str) -> ReplyKeyboardMarkup:
             KeyboardButton(text="Продукция" if lang == 'ru' else "Mahsulotlar"),
             KeyboardButton(text="Эксклюзивные сеты" if lang == 'ru' else "Ekskluziv Setlar")
         ],
-        [
-            KeyboardButton(text="Мерч" if lang == 'ru' else "Merch")
-        ]
+        # [
+        #     KeyboardButton(text="Мерч" if lang == 'ru' else "Merch")
+        # ]
     ]
 
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)
@@ -219,7 +243,7 @@ def settings_kb(lang: str, birth: str = None):
 def phone_number_kb(lang: str):
     buttons = [
         [
-            KeyboardButton(text="Отправить свой номер телефона📞" if lang == "ru" else "Telefon raqamini yuborish📞",
+            KeyboardButton(text="☎️ОТПРАВИТЬ КОНТАКТ" if lang == "ru" else "☎️TELEFON RAQAMINI YUBORISH",
                            request_contact=True)
         ],
         [
@@ -273,9 +297,9 @@ def dop_phone_num(lang: str) -> ReplyKeyboardMarkup:
 
 def pass_kb(lang: str):
     buttons = [
-            [
-                KeyboardButton(text=ru['supp_phone_num'] if lang == "ru" else uz["supp_phone_num"])
-            ]
+        [
+            KeyboardButton(text=ru['supp_phone_num'] if lang == "ru" else uz["supp_phone_num"])
+        ]
     ]
 
     kb = ReplyKeyboardMarkup(resize_keyboard=True, keyboard=buttons)

@@ -42,9 +42,9 @@ def product_inline_kb(lang: str, all_pr: list = None) -> InlineKeyboardMarkup:
     for i in rand_item:
         kb.button(text=i.product_name, callback_data=f"product_{i.id}")
     if lang == 'ru':
-        kb.button(text=ru['back'], callback_data="back_to_category")
+        kb.button(text="Пропустить", callback_data="back_to_category")
     else:
-        kb.button(text=uz['back'], callback_data="back_to_category")
+        kb.button(text="O’tkazmoq", callback_data="back_to_category")
 
     kb.adjust(1)
     return kb.as_markup()
@@ -64,9 +64,9 @@ def product_menu_kb(current_amount=1, plus_or_minus="", lang="ru") -> InlineKeyb
             count = InlineKeyboardButton(text=f"{new_amount}", callback_data=str(new_amount))
     kb.add(minus, count, plus)
     if lang == 'ru':
-        kb.button(text="🛒 В корзину", callback_data="to_cart")
+        kb.button(text="📥 Добавить в корзину", callback_data="to_cart")
     else:
-        kb.button(text="🛒 Qo'shish", callback_data="to_cart")
+        kb.button(text="📥 Savatga qo'shish", callback_data="to_cart")
     kb.adjust(3)
     return kb.as_markup()
 
@@ -99,18 +99,16 @@ def user_cart_edit(lang: str, promo_code: bool = False, all_pr: list = None) -> 
             kb.button(text=ru["promocode"] if lang == 'ru' else uz["promocode"], callback_data="write_promocode")
         kb.button(text="Продолжить заказ" if lang == "ru" else "Zakazni davom etish", callback_data="continue")
         kb.button(text=ru["order"] if lang == 'ru' else uz["order"], callback_data="order")
-        kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="back_to_category")
         kb.adjust(1)
         return kb.as_markup()
 
-    kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="back_to_category")
     kb.adjust(1)
     return kb.as_markup()
 
 
 def back_promocode(lang: str) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
-    kb.button(text="🔙Назад" if lang == 'ru' else "🔙Ortga", callback_data="from_promocode")
+    kb.button(text=ru['back'] if lang == 'ru' else uz['back'], callback_data="from_promocode")
     kb.adjust(1)
     return kb.as_markup()
 
@@ -129,10 +127,10 @@ def wb_button() -> InlineKeyboardMarkup:
 
 def choose_payment_kb(lang: str):
     kb = InlineKeyboardBuilder()
-    kb.button(text="Наличные" if lang == 'ru' else "Naqd", callback_data="cash")
-    kb.button(text="Terminal", callback_data="Terminal")
-    kb.button(text="Payme", callback_data="Payme")
-    kb.button(text="Click", callback_data="Click")
+    kb.button(text="💵Наличные" if lang == 'ru' else "Naqd", callback_data="cash")
+    kb.button(text="💳Terminal", callback_data="Terminal")
+    kb.button(text="💳Payme", callback_data="Payme")
+    kb.button(text="💳Click", callback_data="Click")
 
     kb.adjust(2)
     return kb.as_markup()

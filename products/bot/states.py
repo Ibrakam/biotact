@@ -10,6 +10,7 @@ class StageOfOrderState(StatesGroup):
     get_delivery = State()
     get_location = State()
     get_time = State()
+    location_address = State()
     start_order = State()
     choose_product = State()
     get_product = State()
@@ -37,3 +38,6 @@ class SettingsState(StatesGroup):
     get_settings = State()
     get_birthday = State()
     get_phone = State()
+
+class MailingState(StatesGroup):
+    mailing = State()

@@ -1,11 +1,8 @@
 from django.contrib import admin
-from .models import Product, UserTG, Promocode, UserCart, UsedPromocode
+from .models import Product, UserTG, Promocode, UserCart, UsedPromocode, UserAddress, MyOrders
 
 
 # Register your models here.
-
-
-
 
 
 @admin.register(Product)
@@ -14,6 +11,15 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['created_at']
     list_display = ['id', 'product_name', 'created_at']
     ordering = ['-id']
+
+
+@admin.register(UserAddress)
+class UserAddressAdmin(admin.ModelAdmin):
+    pass
+
+@admin.register(MyOrders)
+class MyOrdersAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user_id']
 
 
 @admin.register(UserCart)
