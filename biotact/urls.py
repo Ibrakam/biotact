@@ -27,6 +27,7 @@ urlpatterns = [
     path('', views.product_list, name='product_list'),
     path('product/<int:product_id>/', views.product_detail, name='product_detail'),
     path('update_cart/', views.update_cart, name='update_cart'),
+    path('export/', views.export_to_excel, name='export_to_excel')
 ]
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

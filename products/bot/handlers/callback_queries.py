@@ -62,15 +62,15 @@ async def product_menu(query, product_id):
     price = float(product.price)
     formatted_price = "{:,.0f} сум".format(price).replace(",", " ")
     if lang == "ru":
-        image = get_image("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url)
+        image = get_image("/root/biotact" + product.product_image.url)
         await query.message.answer_photo(
-            photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
+            photo=FSInputFile("/root/biotact" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
                     f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
     else:
         await query.message.answer_photo(
-            photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
+            photo=FSInputFile("/root/biotact" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
                     f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))

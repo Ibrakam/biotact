@@ -261,14 +261,15 @@ async def order_menu(user_id, state: FSMContext):
             user_id][0] != 'biotact' else "🏃 Olib ketish"
 
     discount = await get_user_promocode_cart(user_id)
-
+    cart_text += (f'\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}' if lang == 'ru' else f'\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}') if user_location[user_id][0] != "biotact" else '\n'
     if discount > 0:
         price_w_discount = total_price_all - (total_price_all * (discount / 100))
-        cart_text += f"\n{discount}% промокод." if lang == 'ru' else f"\n{discount}% chegirma."
-        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")}</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')}</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm"
+        cart_text += f"\nСкидка {discount}%." if lang == 'ru' else f"\n{discount}% chegirma."
+ #       cart_text += (f'\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}' if lang == 'ru' else f'\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}') if user_location[user_id][0] != "biotact" else '\n'
+        cart_text += f"\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")} сум</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум" if lang == 'ru' else f"\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')} som</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
-{(f"Дoполнительные номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительные номер:НЕТ" if lang == "ru" else f"Qo'shimcha raqam:YOQ")}
+{(f"Дoполнительный номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительный номер:НЕТ" if lang == "ru" else f"Qo'shimcha raqam:YOQ")}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
 {"Тип оплаты" if lang == "ru" else "To'lov turi"}: 
 {pay}: {"{:,.0f}".format(price_w_discount).replace(',', ' ')} сум
@@ -277,10 +278,10 @@ async def order_menu(user_id, state: FSMContext):
         """
         return cart_text
     else:
-        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> {"{:,.0f}".format(total_price_all).replace(",", " ")}   сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b>{"{:,.0f}".format(total_price_all).replace(',', ' ')}so'm"
+        cart_text += f"\n<b>Итого: </b> {"{:,.0f}".format(total_price_all).replace(",", " ")} сум" if lang == 'ru' else f"\n<b>Jami: </b>{"{:,.0f}".format(total_price_all).replace(',', ' ')}so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
-{(f"Дoполнительные номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительные номер:НЕТ" if lang == "ru" else f"Qo'shimcha raqam:YOQ")}
+{(f"Дoполнительный номер:{user_location[user_id][1]}" if lang == "ru" else f"Qo'shimcha raqam:user_location[user_id][1]") if user_location[user_id][1] else ("Дополнительный номер:НЕТ" if lang == "ru" else f"Qo'shimcha raqam:YOQ")}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
 {"Тип оплаты" if lang == "ru" else "To'lov turi"}:
 {pay}: {"{:,.0f}".format(total_price_all).replace(",", " ")}
@@ -759,7 +760,7 @@ async def get_delivery(message: Message, state: FSMContext):
     print(my_adress)
     if message.text == ru['inline_keyboard_button']['delivery'] or message.text == uz['inline_keyboard_button'][
         'delivery']:
-        await message.answer("Пожалуйста, скиньте свой адрес" if lang == 'ru' else "Iltimos, manzilni yuboring",
+        await message.answer("Чтобы продолжить заказ, отправьте свое местоположение" if lang == 'ru' else "Iltimos, manzilni yuboring",
                              reply_markup=send_location_kb(lang, my_adress))
         await state.set_state(StageOfOrderState.get_location)
     elif message.text == uz['inline_keyboard_button']['pickup'] or message.text == ru['inline_keyboard_button'][
@@ -904,7 +905,7 @@ def get_user_promocode(user_id=None, lang=None, promocode=None):
     promocode_user = Promocode.objects.filter(promocode_code=promocode)
     if promocode_user.exists():
         UserCart.objects.filter(user_id=user_id).update(promocode=promocode_user.first().promocode_code)
-        return "Промокод активирован" if lang == 'ru' else 'Promokod aktivlashtirildi'
+        return "✅ Промокод активирован" if lang == 'ru' else 'Promokod aktivlashtirildi'
     else:
         return False
 
@@ -974,11 +975,11 @@ async def user_order_conf_menu(user_id, query=None, message=None, kb=choose_paym
     delivery_or_uz = f"🚕Yetkazib berish \n📍 {user_location[user_id][0]}" if \
         user_location[
             user_id][0] != 'biotact' else "🏃 Olib ketish"
-
+    cart_text += (f'\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}' if lang == 'ru' else f'\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}') if user_location[user_id][0] != "biotact" else '\n'
     if discount > 0:
         price_w_discount = total_price_all - (total_price_all * (discount / 100))
         cart_text += f"\n{discount}% промокод." if lang == 'ru' else f"\n{discount}% chegirma."
-        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")}</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')}сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')}</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm"
+        cart_text += f"\n<b>Итого: </b> <s>{"{:,.0f}".format(total_price_all).replace(",", " ")} сум</s>  {"{:,.0f}".format(price_w_discount).replace(',', ' ')}сум" if lang == 'ru' else f"\n<b>Jami: </b><s>{"{:,.0f}".format(total_price_all).replace(',', ' ')} som</s> {"{:,.0f}".format(price_w_discount).replace(',', ' ')} so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
@@ -990,7 +991,7 @@ async def user_order_conf_menu(user_id, query=None, message=None, kb=choose_paym
         elif query:
             await query.message.edit_text(cart_text, reply_markup=kb(lang) if kb else None)
     else:
-        cart_text += f"\n<b>Сумма доставки:</b> {"Бесплатная" if total_price_all >= 250_000 else "30 000 сум"}\n<b>Итого: </b> {"{:,.0f}".format(total_price_all).replace(",", " ")}сум" if lang == 'ru' else f"\nYetkazib berish miqdori: {"Bepul" if total_price_all >= 250_000 else "30 000 som"}\n<b>Jami: </b>{"{:,.0f}".format(total_price_all).replace(',', ' ')}so'm"
+        cart_text += f"\n<b>Итого: </b> {"{:,.0f}".format(total_price_all).replace(",", " ")} сум" if lang == 'ru' else f"\n<b>Jami: </b>{"{:,.0f}".format(total_price_all).replace(',', ' ')}so'm"
         cart_text += f"""\n\n{"Имя" if lang == 'ru' else "Ismi"}: {info[1]}
 {"Телефон" if lang == "ru" else "Telefon"}: {info[0]}
 {"Тип заказа" if lang == "ru" else "Turi"}: {delivery_or if lang == 'ru' else delivery_or_uz}
@@ -1085,15 +1086,15 @@ async def product_menu(message, product_id):
     price = float(product.price)
     formatted_price = "{:,.0f} сум".format(price).replace(",", " ")
     if lang == "ru":
-        image = get_image("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url)
+        image = get_image("/root/biotact" + product.product_image.url)
         await message.answer_photo(
-            photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
+            photo=FSInputFile("/root/biotact" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
                     f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))
     else:
         await message.answer_photo(
-            photo=FSInputFile("/Users/ibragimkadamzanov/PycharmProjects/pythonProject19/" + product.product_image.url),
+            photo=FSInputFile("/root/biotact" + product.product_image.url),
             caption=f"<b>{product.product_name}</b>\n\n"
                     f"{formatted_price}\n\n{product.description_ru}",
             parse_mode="HTML", reply_markup=product_menu_kb(lang=lang))

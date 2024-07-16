@@ -8,19 +8,19 @@ from aiogram.client.default import DefaultBotProperties
 from dotenv import dotenv_values
 from django.core.wsgi import get_wsgi_application
 
-
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 
 # Установка переменной окружения для настроек Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'biotact.settings')
-print("DJANGO_SETTINGS_MODULE =", os.environ.get('DJANGO_SETTINGS_MODULE'))  # Логирование
+#print("DJANGO_SETTINGS_MODULE =", os.environ.get('DJANGO_SETTINGS_MODULE'))  # Логирование
 
 application = get_wsgi_application()
 
 # Инициализация бота
-config_token = dotenv_values(".env")
-bot_token = config_token['BOT_TOKEN']
+#config_token = dotenv_values(".env")
+#b#ot_token = config_token['BOT_TOKEN']
 default = DefaultBotProperties(parse_mode='HTML')
-bot = Bot(token=bot_token, default=default)
+bot = Bot(token='7405721663:AAH0-lAb6l5STqEfF9Wj0i6FbZV-MqNl3y4', default=default)
 dp = Dispatcher()
 
 
